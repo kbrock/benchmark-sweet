@@ -11,7 +11,7 @@ module Benchmark
       # metrics calculated by the memory test suite
       MEMORY_METRICS   = %w(memsize memsize_retained objects objects_retained strings strings_retained).freeze
       # metrics calculated by the database test suite
-      DATABASE_METRICS = %w(queries_objects queries_count queries_other queries_cache).freeze
+      DATABASE_METRICS = %w(rows queries ignored ignored cached).freeze
       ALL_METRICS      = (IPS_METRICS + MEMORY_METRICS + DATABASE_METRICS).freeze
       HIGHER_BETTER    = %w(ips).freeze
 

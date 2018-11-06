@@ -4,10 +4,10 @@ module Benchmark
       def run_queries
         items.each do |entry|
           values = ::Benchmark::Sweet::Queries::QueryCounter.count(&entry.block) # { entry.call_times(1) }
-          add_entry entry.label, "queries_objects", values[:instance_count]
-          add_entry entry.label, "queries_count",   values[:sql_count]
-          add_entry entry.label, "queries_other",   values[:ignored_count]
-          add_entry entry.label, "queries_cache",   values[:cache_count]
+          add_entry entry.label, "rows",    values[:instance_count]
+          add_entry entry.label, "queries", values[:sql_count]
+          add_entry entry.label, "ignored", values[:ignored_count]
+          add_entry entry.label, "cached",  values[:cache_count]
           unless options[:quiet]
             printf "%20s: %3d queries %5d ar_objects", entry.label, values[:sql_count], values[:instance_count]
             printf " (%d ignored)", values[:ignored_count] if values[:ignored_count] > 0
