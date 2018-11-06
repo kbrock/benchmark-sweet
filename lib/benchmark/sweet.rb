@@ -51,7 +51,7 @@ module Benchmark
     #   puts table_rows.tableize(:columns => table_rows.first.keys)
     # end
     def self.table(base, grouping: nil, sort: false,
-                         row:    -> v { v.label },
+                         row:    -> v { v.label.to_s },
                          column: -> v { v.metric },
                          value:  -> v { v.comp_short }, &block)
       group(base, grouping, sort: true) do |table_header, table_comparisons|

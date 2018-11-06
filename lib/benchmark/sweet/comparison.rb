@@ -45,7 +45,7 @@ Benchmark::IPS::Stats::SD.send(:prepend, Benchmark::IPS::Stats::StatsMetric)
 module Benchmark
   module Sweet
     class Comparison
-      UNITS = {"ips" => "i/s", }.freeze
+      UNITS = {"ips" => "i/s", "memsize" => "bytes", "memsize_retained" => "bytes"}.freeze
       attr_reader :label, :metric, :stats, :baseline
       attr_reader :offset, :total
       def initialize(metric, label, offset, total, stats, baseline)
@@ -66,6 +66,7 @@ module Benchmark
       end
 
       def best? ; !baseline ; end
+
       def overlaps?
         return @overlaps if defined?(@overlaps)
         @overlaps = (stats.central_tendency == baseline.central_tendency) || stats.overlaps?(baseline)
@@ -93,7 +94,7 @@ module Benchmark
         when :slower 
           "%20s: %10.1f %s - %.2fx (± %.2f) slower" % [l_to_s.call(label), central_tendency, units, slowdown, error]
         when :slowerish
-          "%20s: %10.1f %s - %.2fx slower" % [l_to_s.call(label), central_tendency, units, slowdown, error]
+          "%20s: %10.1f %s - %.2fx slower" % [l_to_s.call(label), central_tendency, units, slowdown]
         end
       end
 
@@ -106,7 +107,7 @@ module Benchmark
         when :slower 
           "%.1f %s - %.2fx (± %.2f)" % [central_tendency, units, slowdown, error]
         when :slowerish
-          "%.1f %s - %.2fx" % [central_tendency, units, slowdown, error]
+          "%.1f %s - %.2fx" % [central_tendency, units, slowdown]
         end
       end
     end

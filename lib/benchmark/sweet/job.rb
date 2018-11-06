@@ -6,8 +6,11 @@ module Benchmark
       include Benchmark::Sweet::Memory
       include Benchmark::Sweet::Queries
 
+      # metrics calculated by the ips test suite
       IPS_METRICS      = %w(ips).freeze
-      MEMORY_METRICS   = %w(memsize  memsize_retained  objects  objects_retained  strings  strings_retained).freeze
+      # metrics calculated by the memory test suite
+      MEMORY_METRICS   = %w(memsize memsize_retained objects objects_retained strings strings_retained).freeze
+      # metrics calculated by the database test suite
       DATABASE_METRICS = %w(queries_objects queries_count queries_other queries_cache).freeze
       ALL_METRICS      = (IPS_METRICS + MEMORY_METRICS + DATABASE_METRICS).freeze
       HIGHER_BETTER    = %w(ips).freeze
@@ -17,13 +20,10 @@ module Benchmark
       # @returns [Hash<String,Hash<String,Stat>>] entries[name][metric] = value
       attr_reader :entries
 
-      # @option options :quiet    [Boolean]
-      # @option options :time     [Number]
-      # @option options :warmup   [Number]
-      # @option options :ips      [Boolean]
-      # @option options :memory   [Boolean]
-      # @option options :database [Boolean]
-      # @option options :stats    [Symbol] :sd for standard deviation, :bootstrap for Kalibera (default :sd)
+      # @option options :quiet    [Boolean] true to suppress the display of interim test calculations
+      # @option options :warmup   [Number]  For ips tests, the amount of time to warmup
+      # @option options :time     [Number]  For ips tests, the amount of time to the calculations
+      # @option options :metrics  [String|Symbol,Array<String|Symbol] list of metrics to run
       # TODO: :confidence
       attr_reader :options
 
@@ -32,22 +32,16 @@ module Benchmark
       # @return [Nil|Lambda] lambda for grouping
       attr_reader :grouping
 
-      # # lambda that takes a label and produces a string for reports 
-      # # @return [Lambda] lambda to convert an item's label to the screen (default: to_s)
-      # attr_reader :labeling
-
-      # L_TO_S = -> l { l.to_s }
-
       def initialize(options = {})
         @options = options
+        @options[:metrics] ||= IPS_METRICS + %w()
+        validate_metrics(@options[:metrics])
         @items = []
         @entries = {}
-        #@compare = false
         @symbolize_keys = false
         # load / save
         @filename = nil
-        # display lambdas
-        # @labeling = L_TO_S
+        # display
         @grouping = nil
         @reporting = nil
       end
@@ -63,10 +57,10 @@ module Benchmark
       # @returns [Boolean] true to run database queries tests
       def database? ; !(relevant_metric_names & DATABASE_METRICS).empty? ; end
 
-      # TODO: override reporting instead?
-      # @returns  [Boolean] true to compare results
-      #def compare? ; @compare ; end
+      # @returns  [Boolean] true to suppress the display of interim test calculations
       def quiet? ; options[:quiet] ; end
+
+      # @returns  [Boolean] true to run tests for data that has already been processed
       def force? ; options[:force] ; end
 
       # @returns [Array<String>] List of metrics to compare
@@ -83,21 +77,51 @@ module Benchmark
         @filename = filename
       end
 
-      # def compare!
-      #   @compare = true
-      # end
-
+      # &block - a lambda that accepts a label and a stats object
+      # returns a unique object for each set of metrics that should be compared with each other
+      # TODO: accept a symbol (and assume it is a label value) (or possibly :metric as well)
       def compare_by(&block)
         @grouping = block
       end
 
-      def report_with(&block)
-        @reporting = block
-      end
+      # Setup the testing framework
+      # TODO: would be easier to debug if these were part of run_report
+      # @keyword :grouping [Block] proc with parameters label, stat that generates grouping names
+      # @keyword :sort [Boolean] true to sort the rows (default false). NOTE: grouping names ARE sorted
+      # @keyword :row [Symbol|lambda] a lambda (default - display the full label)
+      # @keyword :column (default - metric)
+      # @keyword :value  (default comp_short / value and difference information)
+      def report_with(**args, &block)
+        if args.empty? && block.nil?
+          # nothing given, just use standard ips compare! style report
+          @reporting = lambda(&method(:ips_compare_report))
+          return
+        elsif block && block.arity == 1
+          # block does all aspects of reporting
+          @reporting = block
+          return
+        end
 
-      # def label_with(&block)
-      #   @labeling = block
-      # end
+        # Assume the display grouping is the same as comparison grouping unless an explicit value was provided
+        if !args.key?(:grouping) && @grouping
+          args[:grouping] = @grouping.respond_to?(:call) ? -> v { @grouping.call(v.label, v.stats) } : @grouping
+        end
+
+        # TODO remove more-core-extensions dependency
+        if block.nil?
+          require "more_core_extensions" # tableize
+          header_name = args[:grouping].respond_to?(:call) ? "grouping" : args[:grouping]
+          block = lambda do |table_header, rows|
+            puts "", "#{header_name} #{table_header}", "" if table_header
+            # passing colummns to make sure table keeps the same column order
+            puts rows.tableize(:columns => rows.first.keys)
+          end
+        end
+
+        @reporting = lambda do |comparisons|
+          Benchmark::Sweet.table(comparisons, **args, &block)
+        end
+      end
 
       # if we are using symbols as keys for our labels
       def labels_have_symbols!
@@ -155,7 +179,7 @@ module Benchmark
         end
 
         puts if symbol_key || symbol_value
-        puts "Warning: Please use strings or numbers for label hash values (not nils or symbols). Symbols are not JSON friendly."
+        puts "Warning: Please use strings or numbers for label hash values (not nils or symbols). Symbols are not JSON friendly." if symbol_value
         if symbol_key && !@symbolize_keys
           puts "Warning: Please add labels_have_symbols! to properly support labels with symbols as keys."
           puts "Warning: Please require active support for symbols as keys." unless defined?(ActiveSupport)
@@ -175,18 +199,13 @@ module Benchmark
       # ? label(:metric, :version, :method) => stats
       # @returns [Hash<String,Hash<String,Comparison>>] Same as entries, but contains comparisons not Stats
       def run_report
-        return unless @reporting # || compare?
-
-        results = comparison_values
-        if @reporting
-          @reporting.call(results)
-        else
-          ips_compare_report(results)
+        comparison_values.tap do |results|
+          @reporting.call(results) if @reporting
         end
-        results
       end
 
-      def ips_compare_report(comparions)
+      # output data in a similar manner to benchmark-ips compare!
+      def ips_compare_report(results)
         last_metric = nil
         last_grouping = nil
         results.each do |comparison|
@@ -195,12 +214,13 @@ module Benchmark
             last_grouping = nil
             $stdout.puts "", "Comparing #{last_metric}", ""
           end
-          if grouping
-            if (grouping_name = grouping.call(comparison.label, comparison.stats)) != last_grouping
-              last_grouping = grouping_name
-              $stout.puts "", grouping_name.to_s, grouping_name.to_s.gsub(/./,'-'), ""
+          # normal grouping assumes a label and a stat (it is from before comparisons were created)
+          grouping_name = grouping.call(comparison.label, comparison.stats) if grouping
+          if (grouping_name != last_grouping)
+            last_grouping = grouping_name
+            $stdout.puts "", grouping_name.to_s, grouping_name.to_s.gsub(/./,'-'), ""
           end
-          $stdout.puts report.comp_string
+          $stdout.puts comparison.comp_string -> l { l.to_s }
         end
       end
 
@@ -219,7 +239,16 @@ module Benchmark
           end
         end
       end
+
       private
+
+      def validate_metrics(metric_options)
+        if !(invalid = metric_options - ALL_METRICS).empty?
+          $stderr.puts "unknown metrics: #{invalid.join(", ")}"
+          $stderr.puts "choose: #{(ALL_METRICS).join(", ")}"
+          raise IllegalArgument, "unknown metric: #{invalid.join(", ")}"
+        end
+      end
 
       def create_stats(samples)
         Benchmark::IPS::Stats::SD.new(Array(samples))
