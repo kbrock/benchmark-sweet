@@ -90,9 +90,13 @@ module Benchmark
 
       # &block - a lambda that accepts a label and a stats object
       # returns a unique object for each set of metrics that should be compared with each other
-      # TODO: accept a symbol (and assume it is a label value) (or possibly :metric as well)
-      def compare_by(&block)
-        @grouping = block
+      #
+      # example:
+      #   x.compare_by { |label, value| label[:data] }
+      #   x.compare_by :data
+      #
+      def compare_by(symbol = nil, &block)
+        @grouping = symbol ? -> (label, value) { label[symbol] } : block
       end
 
       # Setup the testing framework
