@@ -95,13 +95,13 @@ module Benchmark
       #   x.compare_by { |label, value| label[:data] }
       #   x.compare_by :data
       #
-      def compare_by(symbol = nil, &block)
-        @grouping = symbol ? -> (label, value) { label[symbol] } : block
+      def compare_by(*symbol, &block)
+        @grouping = symbol.empty? ? block : Proc.new { |label, value| symbol.map { |s| label[s] } }
       end
 
       # Setup the testing framework
       # TODO: would be easier to debug if these were part of run_report
-      # @keyword :grouping [Block] proc with parameters label, stat that generates grouping names
+      # @keyword :grouping [Symbol|Block] proc with parameters label, stat that generates grouping names
       # @keyword :sort [Boolean] true to sort the rows (default false). NOTE: grouping names ARE sorted
       # @keyword :row [Symbol|lambda] a lambda (default - display the full label)
       # @keyword :column (default - metric)
