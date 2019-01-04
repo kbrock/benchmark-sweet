@@ -57,6 +57,16 @@ module Benchmark
         @baseline = baseline unless @offset == 0
       end
 
+      def [](field)
+        case field
+        when :metric      then metric
+        when :comp_short  then comp_short
+        when :comp_string then comp_string
+        when :label       then label  # not sure if this one makes sense
+        else label[field]
+        end
+      end
+
       def central_tendency ; stats.central_tendency ; end
       def error ; stats.error ; end
       def units ; UNITS[metric] || "objs" ; end

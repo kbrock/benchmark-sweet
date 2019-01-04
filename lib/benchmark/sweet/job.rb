@@ -29,6 +29,9 @@ module Benchmark
 
       # lambda used to group metrics that should be compared
       # The lambda takes the label as an argument and returns a unique object per comparison group 
+      # NOTE: This lambda takes a label hash as an argument
+      #       While other lambdas in this api take a comparison object
+      # a symbol is assumed to refer to the label
       # @return [Nil|Lambda] lambda for grouping
       attr_reader :grouping
 
