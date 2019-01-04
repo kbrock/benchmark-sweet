@@ -29,6 +29,6 @@ Benchmark.items(metrics: %w(ips queries rows)) do |x|
   x.report("User.all.first")
   x.report("User.all.to_a.first")
 
-  x.report_with grouping: nil, row: -> x { x.label }, column: -> x { x.metric }
+  x.report_with row: :method, column: :metric
   x.save_file (ENV["SAVE_FILE"] == "true") ? $0.sub(/\.rb$/, '.json') : ENV["SAVE_FILE"] if ENV["SAVE_FILE"]
 end

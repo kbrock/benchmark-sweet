@@ -4,12 +4,57 @@ require "more_core_extensions/all" # [].tabelize
 
 # output:
 #
-#ruby version 2.4.4
+# [:version] 2.3.7
 #
 #  method     | nil_ips               | str_ips       | nil_memsize        | str_memsize
 # ------------+-----------------------+---------------+--------------------+-------------
-#  ?split:[]  | 54245346.4 i/s        | 1565988.8 i/s | 40.0 bytes         | 360.0 bytes
-#  to_s.split | 6329087.9 i/s - 8.57x | 1520690.3 i/s | 80.0 bytes - 2.00x | 360.0 bytes
+#  ?split:[]  | 51574246.6 i/s        | 1434943.3 i/s | 40.0 bytes         | 360.0 bytes
+#  to_s.split | 5707766.1 i/s - 9.04x | 1411708.0 i/s | 80.0 bytes - 2.00x | 360.0 bytes
+#
+# [:version] 2.4.4
+#
+#  method     | nil_ips               | str_ips       | nil_memsize        | str_memsize
+# ------------+-----------------------+---------------+--------------------+-------------
+#  ?split:[]  | 51740193.6 i/s        | 1411882.2 i/s | 40.0 bytes         | 360.0 bytes
+#  to_s.split | 5887968.5 i/s - 8.79x | 1347822.1 i/s | 80.0 bytes - 2.00x | 360.0 bytes
+#
+#
+#
+# (CONDENSED=true) output:
+#
+# [:metric, :version] ips_2.3.7
+#
+#  method      | nil                    | str
+# -------------+------------------------+---------------
+#  ?split:[]   | 51825798.8 i/s         | 1407946.4 i/s
+#  &&split||[] | 46730725.8 i/s - 1.11x | 1413355.3 i/s
+#  to_s.split  | 5685237.1 i/s - 9.12x  | 1396494.3 i/s
+#
+# [:metric, :version] ips_2.4.4
+#
+#  method      | nil                    | str
+# -------------+------------------------+---------------
+#  ?split:[]   | 51559454.4 i/s         | 1438780.8 i/s
+#  &.split||[] | 46446196.0 i/s - 1.11x | 1437665.3 i/s
+#  &&split||[] | 43356335.6 i/s - 1.19x | 1434466.6 i/s
+#  to_s.split  | 5835694.7 i/s - 8.84x  | 1427819.0 i/s
+#
+# [:metric, :version] memsize_2.3.7
+#
+#  method      | nil                | str
+# -------------+--------------------+-------------
+#  ?split:[]   | 40.0 bytes         | 360.0 bytes
+#  &&split||[] | 40.0 bytes         | 360.0 bytes
+#  to_s.split  | 80.0 bytes - 2.00x | 360.0 bytes
+#
+# [:metric, :version] memsize_2.4.4
+#
+#  method      | nil                | str
+# -------------+--------------------+-------------
+#  ?split:[]   | 40.0 bytes         | 360.0 bytes
+#  &&split||[] | 40.0 bytes         | 360.0 bytes
+#  &.split||[] | 40.0 bytes         | 360.0 bytes
+#  to_s.split  | 80.0 bytes - 2.00x | 360.0 bytes
 
 NSTRING = nil
 DELIMITER='/'.freeze
@@ -29,28 +74,11 @@ Benchmark.items(metrics: %w(ips memsize), memory: 3, warmup: 1, time: 1, quiet: 
   # partition the data by ruby version and data present
   # that way we're not comparing a split on a nil vs a split on a populated string
   x.compare_by :version, :data
-  # if we are using built in reporting, a little nicer to display just the method name for the label:
-
-  # custom reporting - all the comparisons are done, we just need to group / display the data
-  x.report_with do |comparisons|
-    # group by version
-    Benchmark::Sweet.group(comparisons, :version, sort: true) do |group_header, group_comparisons|
-      # group by metric
-      Benchmark::Sweet.group(group_comparisons, -> m { m.metric} , sort: true) do |table_header, table_comparisons|
-        puts "", "ruby #{group_header} #{table_header}", ""
-        # produce array, each represents a different method (row label)
-        rows = Benchmark::Sweet.group(table_comparisons, :method).map do |row_header, row_comparisons|
-          # build each row's hash. left most label = method
-          row_comparisons.each_with_object(:method => row_header) do |m, row|
-            # build each row's column: header is $label_$metric, and value is short comparison value
-            row[m.label[:data]] = m.comp_short
-          end
-        end
-        # print table results (thanks more_core_extensions)
-        puts rows.tableize(:columns => rows.first.keys)
-      end
-    end
-  end
+if ENV["CONDENSED"].to_s == "true"
+  x.report_with grouping: :version, sort: true, row: :method, column: [:data, :metric]
+else
+  x.report_with grouping: [:version, :metric], sort: true, row: :method, column: :data
+end
 
   x.save_file ENV["SAVE_FILE"] if ENV["SAVE_FILE"]
 end

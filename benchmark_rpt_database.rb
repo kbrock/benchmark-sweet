@@ -28,24 +28,14 @@ if User.count == 0
   100.times { |i| User.create name: "user #{i}" }
 end
 
-VERSION     = ActiveRecord.version.to_s
-COLUMN_TO_S = -> (m) { m.metric }
-VALUE_TO_S  = lambda do |m|
-  if m.offset == 0            # best
-    "\033[32m#{m.comp_short}\e[0m"
-  elsif m.offset == m.total-1 # worst
-    "\033[31m#{m.comp_short}\e[0m"
-  else
-    m.comp_short
-  end
-end
+VALUE_TO_S  = Benchmark::Sweet.color_symbol_to_proc(:comp_short)
 
 Benchmark.items(metrics: %w(ips memsize), memory: 3, warmup: 1, time: 3, quiet: false, force: ENV["FORCE"] == "true") do |x|
-  x.metadata version: VERSION
+  x.metadata version: ActiveRecord.version.to_s
   x.report("User.all.first") { User.all.first }
   x.report("User.all.to_a.first") { User.all.to_a.first }
 
-  x.report_with grouping: :version, row: :method, column: COLUMN_TO_S, value: VALUE_TO_S
+  x.report_with grouping: :version, row: :method, column: :metric, value: VALUE_TO_S
 
   x.save_file (ENV["SAVE_FILE"] == "true") ? $0.sub(/\.rb$/, '.json') : ENV["SAVE_FILE"] if ENV["SAVE_FILE"]
 end
