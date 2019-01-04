@@ -140,7 +140,6 @@ module Benchmark
 
       # if we are using symbols as keys for our labels
       def labels_have_symbols!
-        @symbolize_keys = true
       end
 
       # report results
@@ -164,11 +163,10 @@ module Benchmark
 
         JSON.load(IO.read(filename)).each do |v|
           n = v["name"]
-          n.symbolize_keys! if n.kind_of?(Hash) && @symbolize_keys
+          n.symbolize_keys!
           add_entry n, v["metric"], v["samples"]
         end
 
-        #puts "have #{@entries.flat_map(&:count).inject(&:+)} #{}"
       end
 
       def save_entries(filename = @filename)
@@ -176,13 +174,11 @@ module Benchmark
         require "json"
 
         # sanity checking
-        symbol_key   = false
         symbol_value = false
 
         data = @entries.flat_map do |metric_name, metric_values|
           metric_values.map do |label, stat|
             # warnings
-            symbol_key    ||= label.kind_of?(Hash) && label.keys.detect { |key| key.kind_of?(Symbol) }
             symbol_values ||= label.kind_of?(Hash) && label.values.detect { |v| v.nil? || v.kind_of?(Symbol) }
             {
               'name'    => label,
@@ -193,12 +189,7 @@ module Benchmark
           end
         end
 
-        puts if symbol_key || symbol_value
-        puts "Warning: Please use strings or numbers for label hash values (not nils or symbols). Symbols are not JSON friendly." if symbol_value
-        if symbol_key && !@symbolize_keys
-          puts "Warning: Please add labels_have_symbols! to properly support labels with symbols as keys."
-          puts "Warning: Please require active support for symbols as keys." unless defined?(ActiveSupport)
-        end
+        puts "", "Warning: Please use strings or numbers for label hash values (not nils or symbols). Symbols are not JSON friendly." if symbol_value
         IO.write(filename, JSON.pretty_generate(data) << "\n")
       end
 

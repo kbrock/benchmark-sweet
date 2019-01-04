@@ -43,4 +43,6 @@ EOF
 
   spec.add_runtime_dependency "benchmark-ips", "~> 2.7.2" # guessing 2.7.3 requirement
   spec.add_runtime_dependency "memory_profiler", "~> 0.9.0"
+  spec.add_runtime_dependency "more_core_extensions" # for [].tabelize        - want to remove
+  spec.add_runtime_dependency "acivesupport"         # for {}.symbolize_keys! - want to remove
 end
