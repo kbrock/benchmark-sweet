@@ -46,7 +46,8 @@ module Benchmark
         @filename = nil
         # display
         @grouping = nil
-        @reporting = nil
+        @report_options = {}
+        @report_block = nil
         # current item metadata
         @meta = {}
       end
@@ -109,31 +110,12 @@ module Benchmark
       # @keyword :row [Symbol|lambda] a lambda (default - display the full label)
       # @keyword :column (default - metric)
       # @keyword :value  (default comp_short / value and difference information)
-      def report_with(**args, &block)
-        if block && block.arity == 1
-          # block does all aspects of reporting
-          @reporting = block
-          return
-        end
-
+      def report_with(args = {}, &block)
+        @report_options = args
+        @report_block = block
         # Assume the display grouping is the same as comparison grouping unless an explicit value was provided
         if !args.key?(:grouping) && @grouping
           args[:grouping] = @grouping.respond_to?(:call) ? -> v { @grouping.call(v.label, v.stats) } : @grouping
-        end
-
-        # TODO remove more-core-extensions dependency
-        if block.nil?
-          require "more_core_extensions" # tableize
-          header_name = args[:grouping].respond_to?(:call) ? "grouping" : args[:grouping]
-          block = lambda do |table_header, rows|
-            puts "", "#{header_name} #{table_header}", "" if table_header
-            # passing colummns to make sure table keeps the same column order
-            puts rows.tableize(:columns => rows.first.keys)
-          end
-        end
-
-        @reporting = lambda do |comparisons|
-          Benchmark::Sweet.table(comparisons, **args, &block)
         end
       end
 
@@ -205,10 +187,21 @@ module Benchmark
       # @returns [Hash<String,Hash<String,Comparison>>] Same as entries, but contains comparisons not Stats
       def run_report
         comparison_values.tap do |results|
-          @reporting.call(results) if @reporting
+          display_report(results)
         end
       end
 
+      def display_report(comparisons)
+        if !@report_block || @report_block.arity == 2
+          Benchmark::Sweet.table(comparisons, **@report_options, &@report_block)
+        else
+          @report_block.call(comparisons)
+        end
+      end
+
+      # of note, this groups with @grouping (defined by group_by)
+      # but then all data continues to the next step
+      # this allows you to make comparisons across rows / columns / grouping
       def comparison_values
         relevant_entries.flat_map do |metric_name, metric_entries|
           partitioned_metrics = grouping ? metric_entries.group_by(&grouping) : {nil => metric_entries}
