@@ -44,6 +44,8 @@ module Benchmark
         # display
         @grouping = nil
         @reporting = nil
+        # current item metadata
+        @meta = {}
       end
 
       def configure(options)
@@ -69,9 +71,18 @@ module Benchmark
       # items to run (typical benchmark/benchmark-ips use case)
       def item(label, action = nil, &block)
         # could use Benchmark::IPS::Job::Entry
-        @items << Item.new(label, action || block)
+        current_meta = label.kind_of?(Hash) ? @meta.merge(label) : @meta.merge(method: label)
+        @items << Item.new(current_meta, action || block)
       end
       alias report item
+
+      def metadata(options)
+        @old_meta = @meta
+        @meta = @meta.merge(options)
+        return unless block_given?
+        yield
+        @meta = @old_meta
+      end
 
       def save_file(filename)
         @filename = filename
@@ -79,9 +90,13 @@ module Benchmark
 
       # &block - a lambda that accepts a label and a stats object
       # returns a unique object for each set of metrics that should be compared with each other
-      # TODO: accept a symbol (and assume it is a label value) (or possibly :metric as well)
-      def compare_by(&block)
-        @grouping = block
+      #
+      # example:
+      #   x.compare_by { |label, value| label[:data] }
+      #   x.compare_by :data
+      #
+      def compare_by(symbol = nil, &block)
+        @grouping = symbol ? -> (label, value) { label[symbol] } : block
       end
 
       # Setup the testing framework
