@@ -110,11 +110,7 @@ module Benchmark
       # @keyword :column (default - metric)
       # @keyword :value  (default comp_short / value and difference information)
       def report_with(**args, &block)
-        if args.empty? && block.nil?
-          # nothing given, just use standard ips compare! style report
-          @reporting = lambda(&method(:ips_compare_report))
-          return
-        elsif block && block.arity == 1
+        if block && block.arity == 1
           # block does all aspects of reporting
           @reporting = block
           return
@@ -210,26 +206,6 @@ module Benchmark
       def run_report
         comparison_values.tap do |results|
           @reporting.call(results) if @reporting
-        end
-      end
-
-      # output data in a similar manner to benchmark-ips compare!
-      def ips_compare_report(results)
-        last_metric = nil
-        last_grouping = nil
-        results.each do |comparison|
-          if last_metric != comparison.metric
-            last_metric = comparison.metric
-            last_grouping = nil
-            $stdout.puts "", "Comparing #{last_metric}", ""
-          end
-          # normal grouping assumes a label and a stat (it is from before comparisons were created)
-          grouping_name = grouping.call(comparison.label, comparison.stats) if grouping
-          if (grouping_name != last_grouping)
-            last_grouping = grouping_name
-            $stdout.puts "", grouping_name.to_s, grouping_name.to_s.gsub(/./,'-'), ""
-          end
-          $stdout.puts comparison.comp_string -> l { l.to_s }
         end
       end
 
