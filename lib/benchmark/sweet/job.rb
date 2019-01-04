@@ -204,6 +204,7 @@ module Benchmark
       # this allows you to make comparisons across rows / columns / grouping
       def comparison_values
         relevant_entries.flat_map do |metric_name, metric_entries|
+          # TODO: map these to Comparison(metric_name, label, stats) So we only have 1 type of lambda
           partitioned_metrics = grouping ? metric_entries.group_by(&grouping) : {nil => metric_entries}
           partitioned_metrics.flat_map do |grouping_name, grouped_metrics|
             sorted = grouped_metrics.sort_by { |n, e| e.central_tendency }
@@ -213,7 +214,7 @@ module Benchmark
             total = sorted.count
 
             # TODO: fix ranking. i / total doesn't work as well when there is only 1 entry or some entries are the same
-            sorted.each_with_index.map { |(label, stats), i| Comparison.new(metric_name, label, i, total, stats, best_stats) }
+            sorted.each_with_index.map { |(label, stats), i| Comparison.new(metric_name, label, stats, i, total, best_stats) }
           end
         end
       end
