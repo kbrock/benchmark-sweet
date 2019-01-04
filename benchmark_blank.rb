@@ -16,8 +16,6 @@ ANIL=nil
 EMPTY=[].freeze
 FULL=["a"].freeze
 
-COLUMN_TO_S = -> (m) { m.label[:data] }
-
 Benchmark.items(metrics: %w(ips)) do |x|
   x.metadata version: RUBY_VERSION
   x.metadata data: 'NIL' do
@@ -52,7 +50,7 @@ Benchmark.items(metrics: %w(ips)) do |x|
   end
 
   x.compare_by :data
-  x.report_with grouping: nil, row: :method, column: COLUMN_TO_S
+  x.report_with grouping: nil, row: :method, column: :data
 
   x.save_file (ENV["SAVE_FILE"] == "true") ? $0.sub(/\.rb$/, '.json') : ENV["SAVE_FILE"] if ENV["SAVE_FILE"]
 end
