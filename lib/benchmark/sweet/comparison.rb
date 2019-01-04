@@ -48,13 +48,13 @@ module Benchmark
       UNITS = {"ips" => "i/s", "memsize" => "bytes", "memsize_retained" => "bytes"}.freeze
       attr_reader :label, :metric, :stats, :baseline
       attr_reader :offset, :total
-      def initialize(metric, label, offset, total, stats, baseline)
+      def initialize(metric, label, stats, offset, total, baseline)
         @metric = metric
         @label = label
+        @stats = stats
         @offset = offset
         @total = total
-        @stats = stats
-        @baseline = baseline unless @offset == 0
+        @baseline = baseline
       end
 
       def [](field)
@@ -75,7 +75,7 @@ module Benchmark
         @mode ||= best? ? :best : overlaps? ? :same : diff_error ? :slowerish : :slower
       end
 
-      def best? ; !baseline ; end
+      def best? ; !baseline || (baseline == stats) ; end
 
       def overlaps?
         return @overlaps if defined?(@overlaps)
