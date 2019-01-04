@@ -6,7 +6,7 @@ module Benchmark
       attr_reader :label, :action
       def initialize(label, action = nil)
         @label = label
-        @action = action || @label #raise("Item needs an action")
+        @action = action || @label[:method] #raise("Item needs an action")
       end
 
       def block
