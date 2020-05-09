@@ -7,6 +7,8 @@ module Benchmark
   module IPS
     module Stats
       module StatsMetric
+        # keep the samples so we can reconstruct this data in future runs
+        # adding an accessor so we can get this data out to store in a json files
         attr_reader :samples
         def initialize(samples, *_)
           @samples = samples
@@ -46,15 +48,16 @@ module Benchmark
   module Sweet
     class Comparison
       UNITS = {"ips" => "i/s", "memsize" => "bytes", "memsize_retained" => "bytes"}.freeze
-      attr_reader :label, :metric, :stats, :baseline
+      attr_reader :label, :metric, :stats, :baseline, :worst
       attr_reader :offset, :total
-      def initialize(metric, label, stats, offset, total, baseline)
+      def initialize(metric, label, stats, offset, total, baseline, worst = nil)
         @metric = metric
         @label = label
         @stats = stats
         @offset = offset
         @total = total
         @baseline = baseline
+        @worst = worst
       end
 
       def [](field)
@@ -77,9 +80,15 @@ module Benchmark
 
       def best? ; !baseline || (baseline == stats) ; end
 
+      # @return true if it is basically the same as the best
       def overlaps?
         return @overlaps if defined?(@overlaps)
-        @overlaps = (stats.central_tendency == baseline.central_tendency) || stats.overlaps?(baseline)
+        @overlaps = slowdown == 1 ||
+                      stats && baseline && (stats.central_tendency == baseline.central_tendency || stats.overlaps?(baseline))
+      end
+
+      def worst?
+        @worst ? stats.overlaps?(@worst) : (total.to_i - 1 == offset.to_i) && slowdown.to_i > 1
       end
 
       def slowdown
@@ -108,16 +117,29 @@ module Benchmark
         end
       end
 
-      def comp_short
+      # I tend to call with:
+      #   c.comp_short("\033[#{c.color}m#{c.central_tendency.round(1)} #{c.units}\e[0m") # "\033[31m#{value}\e[0m"
+      def comp_short(value = nil)
+        value ||= "#{central_tendency.round(1)} #{units}"
         case mode
-        when :best
-          "%.1f %s" % [central_tendency, units]
-        when :same
-          "%.1f %s" % [central_tendency, units]
+        when :best, :same
+          value
         when :slower 
-          "%.1f %s - %.2fx (± %.2f)" % [central_tendency, units, slowdown, error]
+          "%s - %.2fx (± %.2f)" % [value, slowdown, error]
         when :slowerish
-          "%.1f %s - %.2fx" % [central_tendency, units, slowdown]
+          "%s - %.2fx" % [value, slowdown]
+        end
+      end
+
+      def color
+        if !baseline
+          ";0"
+        elsif best? || overlaps?
+          "32"
+        elsif worst?
+          "31"
+        else
+          ";0"
         end
       end
     end
