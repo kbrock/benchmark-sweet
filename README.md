@@ -7,7 +7,7 @@ framework, similar to the benchmark, and benchmark-ips syntax.
 
 Sometimes a benchmark needs to be collected across multiple runs. Using different gem versions or using different ruby versions. This can be done as well.
 
-Lastly, this allows multple axis of comparisons to be performed. Example: Instead of measuring multiple split implementations, it allows measuring these implementations using empty strings and long strings. So a bigger picture is obtained.
+Lastly, this allows multiple axes of comparisons to be performed. Example: Instead of measuring multiple split implementations, it allows measuring these implementations using empty strings and long strings. So a bigger picture is obtained.
 
 ## Installation
 
@@ -70,7 +70,7 @@ Values for method labels (e.g.: `"to_s.split"`) and metrics (e.g.: `ips`) are al
 
 #### `grouping`
 
-In this example, each metric is considered distinct. so each metric is given a
+In this example, each metric is considered distinct so each metric is given a
 unique table (i.e.: `grouping: :metric`)
 
 Metrics of `ips` and `memsize` are calculated (i.e.: `metrics: %w(ips memsize)`)
@@ -149,14 +149,14 @@ Interim values are stored in the save_file.
 
 Running with environment variable `FORCE` will force running this again. (i.e.: `force: ENV["force"] == true`)
 
-Depending upon the environment variable `CONDENSED` there are 2 types of output
+Depending upon the environment variable `CONDENSED`, there are 2 types of output.
 
 #### `compare_by`
 
 We introduce `version` as metadata for the tests. And adding `version` to the comparison
 says that we should only compare values for the same version of ruby (along with the same data)
 
-If you note `version` and `data are not a reserved words. They are just what metadata we
+If you note `version` and `data` are not reserved words, instead, they are just what metadata we
 decided to pass in.
 
 ### Example 2 output
@@ -208,7 +208,7 @@ decided to pass in.
 
 running with `CONDENSED=true` calls with a different `report_with`
 
-As we notice, the number of objects created for the runs are the same.
+As you might notice, the number of objects created for the runs are the same.
 But for some reason, the `nil` split case is slower for ruby 2.5.5
 
 #### version 2.3.7
