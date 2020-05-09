@@ -95,6 +95,8 @@ module Benchmark
       # &block - a lambda that accepts a label and a stats object
       # returns a unique object for each set of metrics that should be compared with each other
       #
+      # unfortunatly, this currently has a different signature than all other lambdas
+      # at this time, there are no comparisons created yet. so it is hard to pass one in
       # example:
       #   x.compare_by { |label, value| label[:data] }
       #   x.compare_by :data
@@ -105,11 +107,13 @@ module Benchmark
 
       # Setup the testing framework
       # TODO: would be easier to debug if these were part of run_report
-      # @keyword :grouping [Symbol|Block] proc with parameters label, stat that generates grouping names
+      # @keyword :grouping [Symbol|lambda|nil] proc with parameters label, stat that generates grouping names
+      #          defaults to the compare_by value
       # @keyword :sort [Boolean] true to sort the rows (default false). NOTE: grouping names ARE sorted
       # @keyword :row [Symbol|lambda] a lambda (default - display the full label)
-      # @keyword :column (default - metric)
-      # @keyword :value  (default comp_short / value and difference information)
+      # @keyword :column [Symbol|lambda] (default :metric)
+      # @keyword :value  (default :comp_short - the value and delta)
+      #          for color, consider passing `value: ->(m){ m.comp_short("\033[#{m.color}m#{m[field]}\e[0m") }`
       def report_with(args = {}, &block)
         @report_options = args
         @report_block = block
@@ -176,7 +180,10 @@ module Benchmark
 
       def run
         # run metrics if they are requested and haven't run yet
-        # may want to override these values
+        # only run the suites that provide the data the user needs.
+        # if the first node has the data, assumes all do
+        #
+        # TODO: may want to override these values
         run_ips     if ips?      && (force? || !@entries.dig(IPS_METRICS.first, items.first.label))
         run_memory  if memory?   && (force? || !@entries.dig(MEMORY_METRICS.first, items.first.label))
         run_queries if database? && (force? || !@entries.dig(DATABASE_METRICS.first, items.first.label))

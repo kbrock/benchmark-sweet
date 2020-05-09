@@ -9,7 +9,6 @@ require "benchmark/ips"
 
 module Benchmark
   module Sweet
-    # Your code goes here...
     def items(options = {memory: true, ips: true})
       job = ::Benchmark::Sweet::Job.new(options)
 
@@ -24,7 +23,9 @@ module Benchmark
       job # both items and entries are useful
     end
 
-    # report helper method
+    # report helper methods
+    # these are the building blocks for the reports printed.
+    # These can be used to create different tables
 
     # @param base [Array<Comparison>}] array of comparisons
     # @param grouping [Symbol|Array<Symbol>|Proc] Proc passed to group_by to partition records.
@@ -46,7 +47,6 @@ module Benchmark
     end
 
     def self.table(base, grouping: nil, sort: false, row: :label, column: :metric, value: :comp_short)
-
       header_name = grouping.respond_to?(:call) ? "grouping" : grouping
       column = symbol_to_proc(column)
       value = symbol_to_proc(value)
@@ -80,19 +80,6 @@ module Benchmark
         end
       else
         field
-      end
-    end
-
-    # @param field [Symbol] field to display in color
-    def self.color_symbol_to_proc(field)
-      lambda do |m|
-        if m.best? || m.overlaps?
-          "\e[32m#{m[field]}\e[0m"
-        elsif m.offset == m.total-1
-          "\e[31m#{m[field]}\e[0m"
-        else
-          "\e[00m#{m[field]}\e[0m"
-        end
       end
     end
 
