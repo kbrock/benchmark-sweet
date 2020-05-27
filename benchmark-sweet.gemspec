@@ -26,7 +26,7 @@ EOF
   if spec.respond_to?(:metadata)
     spec.metadata["homepage_uri"] = spec.homepage
     spec.metadata["source_code_uri"] = "http://github.com/kbrock/benchmark-sweet"
-    spec.metadata["changelog_uri"] = "http://github.com/kbrock/benchmark-sweet/changelog.md"
+    spec.metadata["changelog_uri"] = "http://github.com/kbrock/benchmark-sweet/CHANGELOG.md"
   end
 
   # Specify which files should be added to the gem when it is released.
@@ -37,11 +37,11 @@ EOF
   spec.require_paths = ["lib"]
 
   spec.add_development_dependency "bundler", "~> 1.16"
-  spec.add_development_dependency "rake", "~> 10.0"
+  spec.add_development_dependency "rake", ">= 12.3.3"
   spec.add_development_dependency "rspec", "~> 3.0"
   spec.add_development_dependency "activerecord"
 
-  spec.add_runtime_dependency "benchmark-ips", "~> 2.7.2" # guessing 2.7.3 requirement
+  spec.add_runtime_dependency "benchmark-ips", "~> 2.8.2"
   spec.add_runtime_dependency "memory_profiler", "~> 0.9.0"
   spec.add_runtime_dependency "more_core_extensions" # for [].tabelize        - want to remove
   spec.add_runtime_dependency "activesupport"         # for {}.symbolize_keys! - want to remove
