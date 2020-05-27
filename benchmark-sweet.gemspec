@@ -26,7 +26,7 @@ EOF
   if spec.respond_to?(:metadata)
     spec.metadata["homepage_uri"] = spec.homepage
     spec.metadata["source_code_uri"] = "http://github.com/kbrock/benchmark-sweet"
-    spec.metadata["changelog_uri"] = "http://github.com/kbrock/benchmark-sweet/changelog.md"
+    spec.metadata["changelog_uri"] = "http://github.com/kbrock/benchmark-sweet/CHANGELOG.md"
   end
 
   # Specify which files should be added to the gem when it is released.
