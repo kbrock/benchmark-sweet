@@ -1,13 +1,12 @@
 # Benchmark::Sweet
 
-Time tends not to be consistent across multiple runs. But number of queries or the number of objects allocated tend to be more query.
+Time tends not to be consistent across multiple runs. But numbers of queries or the number of objects allocated tend to be more similar.
 
-This gem allows the user to collect all three of these benchmarks. And it does this using a single
-framework, similar to the benchmark, and benchmark-ips syntax.
+This gem allows the user to collect all three of these benchmarks using a single framework similar to the benchmark and benchmark-ips syntax.
 
-Sometimes a benchmark needs to be collected across multiple runs. Using different gem versions or using different ruby versions. This can be done as well.
+Sometimes a benchmark needs to be collected across multiple runs using different gem versions or using different ruby versions. This can be done as well.
 
-Lastly, this allows multiple axes of comparisons to be performed. Example: Instead of measuring multiple split implementations, it allows measuring these implementations using empty strings and long strings. So a bigger picture is obtained.
+Lastly, this allows multiple axes of comparisons to be performed. Example: instead of measuring multiple split implementations, it allows measuring these implementations using empty strings and long strings oo a bigger picture can be obtained.
 
 ## Installation
 
@@ -61,10 +60,10 @@ end
 #### `compare_by`
 
 The code takes a different amount of time to process a `nil` vs a string. So the values
-are given metadata with the approperiate data used (i.e.: `metadata data: "nil"`)
-The benchmark is then told that the results need to be partitioned by `data` (i.e.: `compare_by :data`)
+are given metadata with the appropriate data used (i.e.: `metadata data: "nil"`).
+The benchmark is then told that the results need to be partitioned by `data` (i.e.: `compare_by :data`).
 
-If you notice that the multipliers are only comparing values with the same data value and do not compare `"string"` values with `"nil"` values.
+The multipliers are only comparing values with the same data value and do not compare `"string"` values with `"nil"` values.
 
 Values for method labels (e.g.: `"to_s.split"`) and metrics (e.g.: `ips`) are already part of the partition.
 
@@ -140,21 +139,21 @@ end
 
 #### `save_file`
 
-A json save file is created. This saves the timings across multiple runs.
+Creates a json save file which saves the timings across multiple runs.
 This is used along with the `version` metadata to record different results per ruby version.
 Another common use is to record ActiveRecord version or a gem's version.
 
-This is run with 2 different versions of ruby.
+This is run with two different versions of ruby.
 Interim values are stored in the save_file.
 
 Running with environment variable `FORCE` will force running this again. (i.e.: `force: ENV["force"] == true`)
 
-Depending upon the environment variable `CONDENSED`, there are 2 types of output.
+Depending upon the environment variable `CONDENSED`, there are two types of output.
 
 #### `compare_by`
 
-We introduce `version` as metadata for the tests. And adding `version` to the comparison
-says that we should only compare values for the same version of ruby (along with the same data)
+We introduce `version` as metadata for the tests. Adding `version` to the comparison
+says that we should only compare values for the same version of ruby (along with the same data).
 
 If you note `version` and `data` are not reserved words, instead, they are just what metadata we
 decided to pass in.
@@ -209,7 +208,7 @@ decided to pass in.
 running with `CONDENSED=true` calls with a different `report_with`
 
 As you might notice, the number of objects created for the runs are the same.
-But for some reason, the `nil` split case is slower for ruby 2.5.5
+But for some reason, the `nil` split case is slower for ruby 2.5.5.
 
 #### version 2.3.7
 
