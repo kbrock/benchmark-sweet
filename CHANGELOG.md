@@ -22,6 +22,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
 
 - better color support
+- updated benchmark-ips and no longer need to monkey patch for it.
+- require benchmark-sweet now works
+- documentation fixes (thanks @d-m-u)
+- example fixes
+
 
 ## 0.0.1 - 2014-05-31
 ### Added
