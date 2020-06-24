@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
+## [0.2.1] - 2020-06-24
+
+### Fixed
+- support increase of infinity
+
 ## [0.2.0] - 2020-05-11
 
 ### Added
@@ -32,5 +37,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - good stuff
 
-[Unreleased]: https://github.com/kbrock/benchmark-sweet/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/kbrock/benchmark-sweet/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/kbrock/benchmark-sweet/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/kbrock/benchmark-sweet/compare/v0.0.1...v0.2.0
