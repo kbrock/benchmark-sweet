@@ -42,7 +42,11 @@ module Benchmark
       end
 
       def worst?
-        @worst ? stats.overlaps?(@worst) : (total.to_i - 1 == offset.to_i) && slowdown.to_i > 1
+        if @worst
+          stats.overlaps?(@worst)
+        else
+          slowdown == Float::INFINITY || (total.to_i - 1 == offset.to_i && slowdown.to_i > 1)
+         end
       end
 
       def slowdown
