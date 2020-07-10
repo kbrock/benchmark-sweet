@@ -1,12 +1,12 @@
 # Benchmark::Sweet
 
-Time tends not to be consistent across multiple runs. But numbers of queries or the number of objects allocated tend to be more similar.
+Time tends not to be consistent across multiple runs, but numbers of queries or the number of objects allocated tend to be more similar.
 
 This gem allows the user to collect all three of these benchmarks using a single framework similar to the benchmark and benchmark-ips syntax.
 
 Sometimes a benchmark needs to be collected across multiple runs using different gem versions or using different ruby versions. This can be done as well.
 
-Lastly, this allows multiple axes of comparisons to be performed. Example: instead of measuring multiple split implementations, it allows measuring these implementations using empty strings and long strings oo a bigger picture can be obtained.
+Lastly, this allows multiple axes of comparisons to be performed. Example: instead of measuring multiple split implementations, it allows measuring these implementations using empty strings and long strings so a bigger picture can be obtained.
 
 ## Installation
 
