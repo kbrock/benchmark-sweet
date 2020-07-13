@@ -31,7 +31,6 @@ Or install it yourself as:
 ```ruby
 require "benchmark/sweet"
 require "active_support/all"
-require "more_core_extensions/all" # [].tabelize
 
 NSTRING = nil
 DELIMITER='/'.freeze
@@ -107,7 +106,6 @@ This is not a native value, it is specified when the items are specified (e.g.:`
 ```ruby
 require "benchmark/sweet"
 require "active_support/all"
-require "more_core_extensions/all" # [].tabelize
 
 NSTRING = nil
 DELIMITER='/'.freeze
