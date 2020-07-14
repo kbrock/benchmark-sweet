@@ -84,10 +84,28 @@ module Benchmark
     end
 
     def self.print_table(header_name, header_value, table_rows)
-      require "more_core_extensions" # defines tableize
       puts "", "#{header_name} #{header_value}", "" if header_value
-      # passing colummns to make sure table keeps the same column order
-      puts table_rows.tableize(:columns => table_rows.first.keys)
+      to_table(table_rows)
+    end
+
+    def self.to_table(arr)
+      field_sizes = Hash.new
+      arr.each { |row| field_sizes.merge!(row => row.map { |iterand| iterand[1].to_s.gsub(/\e\[[^m]+m/, '').length } ) }
+
+      column_sizes = arr.reduce([]) do |lengths, row|
+        row.each_with_index.map { |iterand, index| [lengths[index] || 0, field_sizes[row][index]].max }
+      end
+
+      format = column_sizes.collect {|n| "%#{n}s" }.join(" | ")
+      format += "\n"
+
+      printf format, *arr[0].each_with_index.map { |el, i| " "*(column_sizes[i] - field_sizes[arr[0]][i] ) + el[0].to_s }
+
+      printf format, *column_sizes.collect { |w| "-" * w }
+
+      arr[0..arr.count].each do |line|
+        printf format, *line.each_with_index.map { |el, i| " "*(column_sizes[i] - field_sizes[line][i] ) + el[1].to_s }
+      end
     end
   end
   extend Benchmark::Sweet

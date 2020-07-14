@@ -1,5 +1,4 @@
 require "benchmark/sweet"
-require "more_core_extensions/all"
 require "active_record"
 
 # For various versions of rails, compare `Model.all.first` vs `Model.all.to_a.first`

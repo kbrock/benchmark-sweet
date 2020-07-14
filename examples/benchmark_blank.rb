@@ -1,6 +1,5 @@
 require "benchmark/sweet"
 require "active_support/all"
-require "more_core_extensions/all" # [].tabelize
 
 #  method             | NIL                    | EMPTY                  | FULL
 # --------------------+------------------------+------------------------+------------------------

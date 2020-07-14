@@ -1,5 +1,4 @@
 require "benchmark/sweet"
-require "more_core_extensions/all"
 require "active_record"
 #
 # label               | ips               | queries  | rows
