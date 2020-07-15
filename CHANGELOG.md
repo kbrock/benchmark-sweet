@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 
 ### Fixed
+- properly indent tables with iso color codes (thanks @d-m-u)
 
 ## [0.2.1] - 2020-06-24
 
@@ -37,6 +38,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - good stuff
 
-[Unreleased]: https://github.com/kbrock/benchmark-sweet/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/kbrock/benchmark-sweet/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/kbrock/benchmark-sweet/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/kbrock/benchmark-sweet/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/kbrock/benchmark-sweet/compare/v0.0.1...v0.2.0
