@@ -11,11 +11,10 @@ Gem::Specification.new do |spec|
 
   spec.summary       = %q{Suite to run multiple benchmarks}
   spec.description   = <<-EOF
-  Benchmark Sweet is a suite to run multiple kinds of metrics.
-  It can be configured to run memory, sql query, and ips benchmarks on a common set of code.
-  This data can be collected across multiple runs of the code, to support multiple ruby or
-  gem versions.
-  This also generates more complex comparisons
+  Benchmark Sweet is a suite to run multiple kinds of metrics that allows for the generation
+  of complex comparisons. It can be configured to run memory, sql query, and ips benchmarks
+  on a common set of code. These data can be collected across multiple runs with numerous
+  supported ruby or gem versions.
 EOF
 
   spec.homepage      = "https://github.com/kbrock/benchmark-sweet"
