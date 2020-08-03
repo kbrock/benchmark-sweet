@@ -48,7 +48,7 @@ Benchmark.items(metrics: %w(ips memsize)) do |x|
 
   # partition the data by data value (nil vs string)
   # that way we're not comparing a split on a nil vs a split on a populated string
-  compare_by :data
+  x.compare_by :data
 
   # each row is a different method (via `row: :method`)
   # each column is by data type (via `column: :data` - specified via `metadata data: "nil"`)
