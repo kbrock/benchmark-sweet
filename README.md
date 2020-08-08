@@ -36,6 +36,8 @@ NSTRING = nil
 DELIMITER='/'.freeze
 STRING="ab/cd/ef/gh".freeze
 
+VALUE_TO_S  = ->(m) { m.comp_short("\e[#{m.color}m#{m.central_tendency.round(1)} #{m.units}\e[0m") }
+
 Benchmark.items(metrics: %w(ips memsize)) do |x|
   x.metadata data: "nil" do
     x.report("to_s.split") { NSTRING.to_s.split(DELIMITER)           }
@@ -52,7 +54,7 @@ Benchmark.items(metrics: %w(ips memsize)) do |x|
 
   # each row is a different method (via `row: :method`)
   # each column is by data type (via `column: :data` - specified via `metadata data: "nil"`)
-  x.report_with grouping: :metric, sort: true, row: :method, column: :data
+  x.report_with grouping: :metric, sort: true, row: :method, column: :data, value: VALUE_TO_S
 end
 ```
 
