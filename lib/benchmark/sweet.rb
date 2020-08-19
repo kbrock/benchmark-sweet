@@ -89,21 +89,36 @@ module Benchmark
     end
 
     def self.to_table(arr)
-      field_sizes = Hash.new
-      arr.each { |row| field_sizes.merge!(row => row.map { |iterand| iterand[1].to_s.gsub(/\e\[[^m]+m/, '').length } ) }
+      if arr.map { |row| row.size }.uniq.size > 1
+        #at least one array element is missing a column (nil.empty? on the blank example)
+        arr_copy = arr.dup
+        max_col_count = arr.map { |row| row.size }.uniq.max
+        cols = arr.find { |row| row.count == max_col_count }.map(&:first)
+        arr[0..arr.count].each do |line|
+          if line.count < max_col_count
+            arr_copy.delete(line)
+            line = line.to_a
+            cols.select { |c| !line.map(&:first).include?(c) }.each { |col| line.insert(cols.index(col), [col, ""]) }
+            arr_copy << line.to_h
+          end
+        end
+      end
 
-      column_sizes = arr.reduce([]) do |lengths, row|
+      field_sizes = Hash.new
+      arr_copy.each { |row| field_sizes.merge!(row => row.map { |iterand| iterand[1].to_s.gsub(/\e\[[^m]+m/, '').length } ) }
+
+      column_sizes = arr_copy.reduce([]) do |lengths, row|
         row.each_with_index.map { |iterand, index| [lengths[index] || 0, field_sizes[row][index]].max }
       end
 
       format = column_sizes.collect {|n| "%#{n}s" }.join(" | ")
       format += "\n"
 
-      printf format, *arr[0].each_with_index.map { |el, i| " "*(column_sizes[i] - field_sizes[arr[0]][i] ) + el[0].to_s }
+      printf format, *arr_copy[0].each_with_index.map { |el, i| " "*(column_sizes[i] - field_sizes[arr_copy[0]][i] ) + el[0].to_s }
 
       printf format, *column_sizes.collect { |w| "-" * w }
 
-      arr[0..arr.count].each do |line|
+      arr_copy[0..arr_copy.count].each do |line|
         printf format, *line.each_with_index.map { |el, i| " "*(column_sizes[i] - field_sizes[line][i] ) + el[1].to_s }
       end
     end
