@@ -58,6 +58,10 @@ module Benchmark
             row_data[column.call(comparison)] = value.call(comparison)
           end
         end
+
+        cols = table_rows.map(&:keys).uniq
+        table_rows = normalize_data(table_rows, cols) unless cols.count == 1
+
         if block_given?
           yield header_value, table_rows
         else
@@ -105,6 +109,16 @@ module Benchmark
 
       arr[0..arr.count].each do |line|
         printf format, *line.each_with_index.map { |el, i| " "*(column_sizes[i] - field_sizes[line][i] ) + el[1].to_s }
+      end
+    end
+
+    def self.normalize_data(rows, cols)
+      correct_row_count = cols.map(&:count).max
+      correct_rows = rows.detect { |r| r.count == correct_row_count}.keys
+      rows.each do |r|
+        next if r.count == correct_row_count
+
+        (correct_rows - r.keys).each { |missing_key| r.merge!(missing_key => nil)}
       end
     end
   end
