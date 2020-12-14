@@ -107,7 +107,7 @@ module Benchmark
 
       printf format, *column_sizes.collect { |w| "-" * w }
 
-      arr[0..arr.count].each do |line|
+      arr.each do |line|
         printf format, *line.each_with_index.map { |el, i| " "*(column_sizes[i] - field_sizes[line][i] ) + el[1].to_s }
       end
     end
