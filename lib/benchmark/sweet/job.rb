@@ -164,7 +164,6 @@ module Benchmark
         data = @entries.flat_map do |metric_name, metric_values|
           metric_values.map do |label, stat|
             # warnings
-            symbol_values ||= label.kind_of?(Hash) && label.values.detect { |v| v.nil? || v.kind_of?(Symbol) }
             {
               'name'    => label,
               'metric'  => metric_name,
