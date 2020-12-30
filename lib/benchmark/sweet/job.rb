@@ -102,7 +102,7 @@ module Benchmark
       #   x.compare_by :data
       #
       def compare_by(*symbol, &block)
-        @grouping = symbol.empty? ? block : Proc.new { |label, value| symbol.map { |s| label[s] } }
+        @grouping = symbol.empty? ? block : Proc.new { |label, _value| symbol.map { |s| label[s] } }
       end
 
       # Setup the testing framework
@@ -213,8 +213,8 @@ module Benchmark
         relevant_entries.flat_map do |metric_name, metric_entries|
           # TODO: map these to Comparison(metric_name, label, stats) So we only have 1 type of lambda
           partitioned_metrics = grouping ? metric_entries.group_by(&grouping) : {nil => metric_entries}
-          partitioned_metrics.flat_map do |grouping_name, grouped_metrics|
-            sorted = grouped_metrics.sort_by { |n, e| e.central_tendency }
+          partitioned_metrics.flat_map do |_grouping_name, grouped_metrics|
+            sorted = grouped_metrics.sort_by { |_n, e| e.central_tendency }
             sorted.reverse! if HIGHER_BETTER.include?(metric_name)
 
             _best_label, best_stats = sorted.first

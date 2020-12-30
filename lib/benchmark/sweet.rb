@@ -40,7 +40,7 @@ module Benchmark
 
       grouping = symbol_to_proc(grouping)
 
-      label_records = base.group_by(&grouping).select { |value, comparisons| !value.nil? }
+      label_records = base.group_by(&grouping).select { |value, _comparisons| !value.nil? }
       label_records = label_records.sort_by(&:first) if sort
 
       label_records.each(&block)
@@ -93,7 +93,7 @@ module Benchmark
       arr.each { |row| field_sizes.merge!(row => row.map { |iterand| iterand[1].to_s.gsub(/\e\[[^m]+m/, '').length } ) }
 
       column_sizes = arr.reduce([]) do |lengths, row|
-        row.each_with_index.map { |iterand, index| [lengths[index] || 0, field_sizes[row][index]].max }
+        row.each_with_index.map { |_iterand, index| [lengths[index] || 0, field_sizes[row][index]].max }
       end
 
       format = column_sizes.collect {|n| "%#{n}s" }.join(" | ")
