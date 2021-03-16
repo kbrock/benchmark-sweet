@@ -58,11 +58,8 @@ module Benchmark
             row_data[column.call(comparison)] = value.call(comparison)
           end
         end
-        if block_given?
-          yield header_value, table_rows
-        else
-          print_table(header_name, header_value, table_rows)
-        end
+        table_cols = normalize_data(table_rows) unless table_cols.count == 1
+        print_table(header_name, header_value, table_rows, table_cols)
       end
     end
 
@@ -83,29 +80,46 @@ module Benchmark
       end
     end
 
-    def self.print_table(header_name, header_value, table_rows)
-      puts "", "#{header_name} #{header_value}", "" if header_value
-      to_table(table_rows)
+    def self.print_table(header_name, header_value, rows, cols)
+      puts
+      puts cols.inspect
+      puts
+      puts "#{header_name} #{header_value}", "" if header_value
+      to_table(rows, cols)
     end
 
-    def self.to_table(arr)
-      field_sizes = Hash.new
-      arr.each { |row| field_sizes.merge!(row => row.map { |iterand| iterand[1].to_s.gsub(/\e\[[^m]+m/, '').length } ) }
+    COLOR_ESCAPE = /\e\[[^m]+m/
+    def self.to_table(rows, cols)
 
-      column_sizes = arr.reduce([]) do |lengths, row|
+      rows.each do |row|
+        field_sizes[row] = cols.map { |col| row[col].to_s.gsub(COLOR_ESCAPE, '').length }
+      end
+      field_sizes[cols] = cols.map { |col| col.to_s.gsub(COLOR_ESCAPE, '').length }
+
+      column_sizes = rows.reduce([]) do |lengths, row|
         row.each_with_index.map { |_iterand, index| [lengths[index] || 0, field_sizes[row][index]].max }
       end
 
-      format = column_sizes.collect {|n| "%#{n}s" }.join(" | ")
+      format  = " "
+      format += "\e[32m%#{column_sizes.first}s | "
+      format += column_sizes[1..-1].collect {|n| "%-#{n}s" }.join(" | ")
       format += "\n"
 
-      printf format, *arr[0].each_with_index.map { |el, i| " "*(column_sizes[i] - field_sizes[arr[0]][i] ) + el[0].to_s }
+      printf format, *cols
 
       printf format, *column_sizes.collect { |w| "-" * w }
-
-      arr[0..arr.count].each do |line|
-        printf format, *line.each_with_index.map { |el, i| " "*(column_sizes[i] - field_sizes[line][i] ) + el[1].to_s }
+      rows.each do |row|
+        data  = [row[cols[0]]]
+        data += cols[1..-1].each_with_index.map { |el, i| row[el].to_s + " "*(column_sizes[i+1] - field_sizes[row][i+1] ) }
+        printf format, *data
       end
+    end
+
+     def self.normalize_data(rows)
+      cols = []
+      rows.each { |r| cols |= r.keys }
+      rows.each { |r| cols.each { |k| r[k] ||= nil } }
+      cols
     end
   end
   extend Benchmark::Sweet
