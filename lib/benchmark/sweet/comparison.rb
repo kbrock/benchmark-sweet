@@ -88,18 +88,6 @@ module Benchmark
           "%s - %.2fx" % [value, slowdown]
         end
       end
-
-      def color
-        if !baseline
-          ";0"
-        elsif best? || overlaps?
-          "32"
-        elsif worst?
-          "31"
-        else
-          ";0"
-        end
-      end
     end
   end
 end
