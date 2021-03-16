@@ -58,11 +58,7 @@ module Benchmark
             row_data[column.call(comparison)] = value.call(comparison)
           end
         end
-        if block_given?
-          yield header_value, table_rows
-        else
-          print_table(header_name, header_value, table_rows)
-        end
+        print_table(header_name, header_value, table_rows)
       end
     end
 
