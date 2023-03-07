@@ -37,7 +37,7 @@ module Benchmark
 
       def initialize(options = {})
         @options = options
-        @options[:metrics] ||= IPS_METRICS + %w()
+        @options[:metrics] ||= IPS_METRICS.dup
         validate_metrics(@options[:metrics])
         @items = []
         @entries = {}
@@ -57,20 +57,20 @@ module Benchmark
       end
 
       # @returns [Boolean] true to run iterations per second tests
-      def ips? ; !(relevant_metric_names & IPS_METRICS).empty? ; end
+      def ips? ; (relevant_metric_names & IPS_METRICS).any?; end
       # @returns [Boolean] true to run memory tests
-      def memory? ; !(relevant_metric_names & MEMORY_METRICS).empty? ; end
+      def memory? ; (relevant_metric_names & MEMORY_METRICS).any?; end
       # @returns [Boolean] true to run database queries tests
-      def database? ; !(relevant_metric_names & DATABASE_METRICS).empty? ; end
+      def database? ; (relevant_metric_names & DATABASE_METRICS).any?; end
 
       # @returns  [Boolean] true to suppress the display of interim test calculations
-      def quiet? ; options[:quiet] ; end
+      def quiet?; options[:quiet]; end
 
       # @returns  [Boolean] true to run tests for data that has already been processed
-      def force? ; options[:force] ; end
+      def force?; options[:force]; end
 
       # @returns [Array<String>] List of metrics to compare
-      def relevant_metric_names ; options[:metrics] ; end
+      def relevant_metric_names; options[:metrics]; end
 
       # items to run (typical benchmark/benchmark-ips use case)
       def item(label, action = nil, &block)
