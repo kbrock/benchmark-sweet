@@ -99,7 +99,7 @@ module Benchmark
       format = column_sizes.collect {|n| "%#{n}s" }.join(" | ")
       format += "\n"
 
-      printf format, *arr[0].each_with_index.map { |el, i| " "*(column_sizes[i] - field_sizes[arr[0]][i] ) + el[0].to_s }
+      printf format, *arr[0].each_with_index.map { |el, i| " "*(column_sizes[i].to_i - field_sizes[arr[0]][i].to_i ) + el[0].to_s }
 
       printf format, *column_sizes.collect { |w| "-" * w }
 
