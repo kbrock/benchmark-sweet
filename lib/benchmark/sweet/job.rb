@@ -76,7 +76,7 @@ module Benchmark
       def item(label, action = nil, &block)
         # could use Benchmark::IPS::Job::Entry
         current_meta = label.kind_of?(Hash) ? @meta.merge(label) : @meta.merge(method: label)
-        @items << Item.new(current_meta, action || block)
+        @items << Item.new(normalize_label(current_meta), action || block)
       end
       alias report item
 
@@ -147,8 +147,7 @@ module Benchmark
         require "json"
 
         JSON.load(IO.read(filename)).each do |v|
-          n = v["name"]
-          n.symbolize_keys!
+          n = normalize_label(v["name"].transform_keys(&:to_sym))
           add_entry n, v["metric"], v["samples"]
         end
 
@@ -158,22 +157,16 @@ module Benchmark
         return unless filename
         require "json"
 
-        # sanity checking
-        symbol_value = false
-
         data = @entries.flat_map do |metric_name, metric_values|
           metric_values.map do |label, stat|
-            # warnings
             {
               'name'    => label,
               'metric'  => metric_name,
               'samples' => stat.samples,
-              # extra data like measured_us, iter, and others?
             }
           end
         end
 
-        puts "", "Warning: Please use strings or numbers for label hash values (not nils or symbols). Symbols are not JSON friendly." if symbol_value
         IO.write(filename, JSON.pretty_generate(data) << "\n")
       end
 
@@ -233,6 +226,11 @@ module Benchmark
           $stderr.puts "choose: #{(ALL_METRICS).join(", ")}"
           raise IllegalArgument, "unknown metric: #{invalid.join(", ")}"
         end
+      end
+
+      # Normalize label hash values to strings so labels match after JSON round-trip
+      def normalize_label(label)
+        label.transform_values(&:to_s)
       end
 
       def create_stats(samples)

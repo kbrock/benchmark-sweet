@@ -42,5 +42,4 @@ EOF
 
   spec.add_runtime_dependency "benchmark-ips", "~> 2.8.2"
   spec.add_runtime_dependency "memory_profiler", "~> 0.9.0"
-  spec.add_runtime_dependency "activesupport"         # for {}.symbolize_keys! - want to remove
 end

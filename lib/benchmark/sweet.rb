@@ -89,22 +89,30 @@ module Benchmark
     end
 
     def self.to_table(arr)
-      field_sizes = Hash.new
-      arr.each { |row| field_sizes.merge!(row => row.map { |iterand| iterand[1].to_s.gsub(/\e\[[^m]+m/, '').length } ) }
+      return if arr.empty?
 
-      column_sizes = arr.reduce([]) do |lengths, row|
-        row.each_with_index.map { |_iterand, index| [lengths[index] || 0, field_sizes[row][index]].max }
+      strip_ansi = ->(s) { s.to_s.gsub(/\e\[[^m]*m/, '') }
+
+      # collect headers from the first row's keys
+      headers = arr[0].keys
+
+      # compute visible width for each column (max of header and all values)
+      column_sizes = headers.each_with_index.map do |header, i|
+        values_max = arr.map { |row| strip_ansi.call(row.values[i]).length }.max
+        [strip_ansi.call(header).length, values_max].max
       end
 
-      format = column_sizes.collect {|n| "%#{n}s" }.join(" | ")
-      format += "\n"
+      # right-align with ANSI-aware padding
+      pad = ->(str, width) {
+        visible = strip_ansi.call(str).length
+        " " * [width - visible, 0].max + str.to_s
+      }
 
-      printf format, *arr[0].each_with_index.map { |el, i| " "*(column_sizes[i].to_i - field_sizes[arr[0]][i].to_i ) + el[0].to_s }
+      puts headers.each_with_index.map { |h, i| pad.call(h.to_s, column_sizes[i]) }.join(" | ")
+      puts column_sizes.map { |w| "-" * w }.join("-|-")
 
-      printf format, *column_sizes.collect { |w| "-" * w }
-
-      arr[0..arr.count].each do |line|
-        printf format, *line.each_with_index.map { |el, i| " "*(column_sizes[i] - field_sizes[line][i] ) + el[1].to_s }
+      arr.each do |row|
+        puts row.values.each_with_index.map { |v, i| pad.call(v.to_s, column_sizes[i]) }.join(" | ")
       end
     end
   end

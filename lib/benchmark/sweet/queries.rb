@@ -41,7 +41,7 @@ module Benchmark
         def callback(_name, _start, _finish, _id, payload)
           if payload[:sql]
             if payload[:name] == CACHE_STATEMENT
-              @instance[:cache_count] += 1
+              @instances[:cache_count] += 1
             elsif IGNORED_STATEMENTS.include?(payload[:name]) || IGNORED_QUERIES.match(payload[:sql])
               @instances[:ignored_count] += 1
             else
