@@ -26,8 +26,8 @@ module Benchmark
           rpts = (options[:memory] || 1).times.map { MemoryProfiler.report(&entry.block) }
           tot_stat  = add_entry(name, "memsize",          rpts.map(&:total_allocated_memsize))
           totr_stat = add_entry name, "memsize_retained", rpts.map(&:total_retained_memsize)
-          obj_stat  = add_entry name, "objects",          rpts.map(&:total_allocated) ## ? size
-          objr_stat = add_entry name, "objects_retained", rpts.map(&:total_retained)
+          add_entry name, "objects",          rpts.map(&:total_allocated)
+          add_entry name, "objects_retained", rpts.map(&:total_retained)
           str_stat  = add_entry(name, "strings",          rpts.map { |rpt| rpt.strings_allocated.size })
           strr_stat = add_entry(name, "strings_retained", rpts.map { |rpt| rpt.strings_retained.size })
 

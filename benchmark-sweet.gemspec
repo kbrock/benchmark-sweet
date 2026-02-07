@@ -24,8 +24,8 @@ EOF
   # to allow pushing to a single host or delete this section to allow pushing to any host.
   if spec.respond_to?(:metadata)
     spec.metadata["homepage_uri"] = spec.homepage
-    spec.metadata["source_code_uri"] = "http://github.com/kbrock/benchmark-sweet"
-    spec.metadata["changelog_uri"] = "http://github.com/kbrock/benchmark-sweet/CHANGELOG.md"
+    spec.metadata["source_code_uri"] = "https://github.com/kbrock/benchmark-sweet"
+    spec.metadata["changelog_uri"] = "https://github.com/kbrock/benchmark-sweet/blob/master/CHANGELOG.md"
   end
 
   # Specify which files should be added to the gem when it is released.
@@ -40,6 +40,6 @@ EOF
   spec.add_development_dependency "activerecord"
   spec.add_development_dependency "sqlite3"
 
-  spec.add_runtime_dependency "benchmark-ips", "~> 2.8.2"
-  spec.add_runtime_dependency "memory_profiler", "~> 0.9.0"
+  spec.add_runtime_dependency "benchmark-ips", "~> 2.14"
+  spec.add_runtime_dependency "memory_profiler", "~> 1.1"
 end
