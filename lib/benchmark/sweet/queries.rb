@@ -2,16 +2,20 @@ module Benchmark
   module Sweet
     module Queries
       def run_queries
-        items.each do |entry|
-          values = ::Benchmark::Sweet::Queries::QueryCounter.count(&entry.block) # { entry.call_times(1) }
-          add_entry entry.label, "rows",    values[:instance_count]
-          add_entry entry.label, "queries", values[:sql_count]
-          add_entry entry.label, "ignored", values[:ignored_count]
-          add_entry entry.label, "cached",  values[:cache_count]
-          unless options[:quiet]
-            printf "%20s: %3d queries %5d ar_objects", entry.label, values[:sql_count], values[:instance_count]
-            printf " (%d ignored)", values[:ignored_count] if values[:ignored_count] > 0
-            puts
+        cntr = ::Benchmark::Sweet::Queries::QueryCounter.new
+        cntr.sub do
+          items.each do |entry|
+            entry.block.call
+            values = cntr.get_clear
+            add_entry entry.label, "rows",    values[:instance_count]
+            add_entry entry.label, "queries", values[:sql_count]
+            add_entry entry.label, "ignored", values[:ignored_count]
+            add_entry entry.label, "cached",  values[:cache_count]
+            unless options[:quiet]
+              printf "%20s: %3d queries %5d ar_objects", entry.label, values[:sql_count], values[:instance_count]
+              printf " (%d ignored)", values[:ignored_count] if values[:ignored_count] > 0
+              puts
+            end
           end
         end
       end
@@ -30,10 +34,14 @@ module Benchmark
         IGNORED_STATEMENTS = %w(CACHE SCHEMA).freeze
         IGNORED_QUERIES    = /^(?:ROLLBACK|BEGIN|COMMIT|SAVEPOINT|RELEASE)/.freeze
 
+        def initialize
+          clear
+        end
+
         def callback(_name, _start, _finish, _id, payload)
           if payload[:sql]
             if payload[:name] == CACHE_STATEMENT
-              @instance[:cache_count] += 1
+              @instances[:cache_count] += 1
             elsif IGNORED_STATEMENTS.include?(payload[:name]) || IGNORED_QUERIES.match(payload[:sql])
               @instances[:ignored_count] += 1
             else
@@ -48,11 +56,24 @@ module Benchmark
           lambda(&method(:callback))
         end
 
-        # TODO: possibly setup a single subscribe and use a context/thread local to properly count metrics
-        def count(&block)
+        def clear
           @instances = {cache_count: 0, ignored_count: 0, sql_count: 0, instance_count: 0}
-          ActiveSupport::Notifications.subscribed(callback_proc, /active_record/, &block)
+        end
+
+        def get_clear; @instances.tap { clear }; end
+        def get; @instances; end
+
+        # either use 10.times { value = count(&block) }
+        # or use
+        # sub { 10.times { block.call; value = get_clear } }
+        def count(&block)
+          clear
+          sub(&block)
           @instances
+        end
+
+        def sub(&block)
+          ActiveSupport::Notifications.subscribed(callback_proc, /active_record/, &block)
         end
       end
     end

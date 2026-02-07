@@ -17,7 +17,7 @@ module Benchmark
         #   add_entry e.label, "string_retained",  e.measurement.string.retained
         # end
         require 'memory_profiler'
-        puts "Memory Profiling----------" unless quiet?
+        $stdout.puts "Memory Profiling----------" unless quiet?
 
         items.each do |entry|
           name = entry.label
