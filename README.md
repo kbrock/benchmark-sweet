@@ -226,15 +226,18 @@ Benchmark.items(metrics: %w(ips memsize)) do |x|
 
   x.compare_by :version, :data
   x.report_with grouping: [:version, :metric], sort: true, row: :method, column: :data
-  x.save_file "split_results.json"
+  x.save_file
 end
 ```
 
 #### `save_file`
 
-Creates a JSON file that persists results across runs. Run once with Ruby 3.3, then again
-with Ruby 3.4 — the file accumulates both. Another common use is recording `ActiveRecord.version`
-to compare across gem versions.
+Creates a JSON file that persists results across runs. When called without arguments,
+the filename defaults to the script name with a `.json` extension (e.g., `split.rb` → `split.json`).
+You can also pass an explicit path: `x.save_file "custom_results.json"`.
+
+Run once with Ruby 3.3, then again with Ruby 3.4 — the file accumulates both. Another
+common use is recording `ActiveRecord.version` to compare across gem versions.
 
 Running with `force: true` will re-run and overwrite previously saved data for the same metadata.
 

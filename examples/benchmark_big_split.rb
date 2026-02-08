@@ -44,5 +44,5 @@ Benchmark.items(metrics: %w(ips memsize), memory: 3, warmup: 1, time: 3, quiet: 
   x.compare_by :version, :data
   x.report_with grouping: [:metric, :version], row: :method, column: [:data], value: :comp_short
 
-  x.save_file (ENV["SAVE_FILE"] == "true") ? $0.sub(/\.rb$/, '.json') : ENV["SAVE_FILE"] if ENV["SAVE_FILE"]
+  x.save_file if ENV["SAVE_FILE"].to_s =~ /t/i
 end

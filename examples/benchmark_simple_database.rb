@@ -44,6 +44,5 @@ Benchmark.items(metrics: %w(ips queries rows)) do |x|
   # metric names across the top (column)
   # method names down the side (rows)
   x.report_with row: [:method], column: [:metric], grouping: :model, sort: true
-  # pass SAVE_FILE=true, to save results to a file (true chooses name, or pass actual file name)
-  x.save_file (ENV["SAVE_FILE"] == "true") ? $0.sub(/\.rb$/, '.json') : ENV["SAVE_FILE"] if ENV["SAVE_FILE"]
+  x.save_file if ENV["SAVE_FILE"].to_s =~ /t/i
 end

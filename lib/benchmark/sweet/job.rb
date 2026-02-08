@@ -88,7 +88,7 @@ module Benchmark
         @meta = @old_meta
       end
 
-      def save_file(filename)
+      def save_file(filename = $PROGRAM_NAME.sub(/\.rb$/, '.json'))
         @filename = filename
       end
 
