@@ -26,6 +26,11 @@ Flow: `Benchmark.items` creates a `Job`, yields it for configuration, loads save
 
 Labels are Hashes (not strings), enabling multi-dimensional `compare_by` and `report_with` grouping/pivoting.
 
+## Usage
+
+See [README.md](README.md) for full API documentation, including labels, `metadata`, `compare_by`,
+`report_with`, `save_file`, cross-version comparisons, and custom value formatting.
+
 ## Dependencies
 
 - `benchmark-ips` — IPS measurement and Stats::SD class
