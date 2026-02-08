@@ -123,10 +123,6 @@ module Benchmark
         end
       end
 
-      # if we are using symbols as keys for our labels
-      def labels_have_symbols!
-      end
-
       # report results
       def add_entry(label, metric, stat)
         (@entries[metric] ||= {})[label] = stat.respond_to?(:central_tendency) ? stat : create_stats(stat)
