@@ -296,6 +296,32 @@ x.report_with grouping: :version, sort: true, row: :method, column: [:data, :met
 As you might notice, the number of objects created for the runs are the same across versions.
 But the ips numbers may vary — letting you spot performance regressions.
 
+## SQL pattern capture with `save_sql`
+
+When benchmarking ActiveRecord code, `save_sql` captures the SQL queries executed during
+the `queries` metric pass and writes them to a diffable text file with EXPLAIN plans:
+
+```ruby
+Benchmark.items(metrics: %w(ips queries rows)) do |x|
+  x.metadata version: RUBY_VERSION
+  x.metadata data: "nil" do
+    x.report("to_s.split") { NSTRING.to_s.split(DELIMITER)           }
+    x.report("?split:[]")  { NSTRING ? NSTRING.split(DELIMITER) : [] }
+  end
+
+  x.save_file "results/split.json"
+  x.save_sql  "results/split.sql"
+end
+```
+
+SQL values are normalized to `?` so patterns are stable across runs. Duplicate queries
+within an operation are collapsed with a count. To compare across configurations or
+versions, generate one file per variant and diff:
+
+```bash
+diff results/v1.sql results/v2.sql
+```
+
 ## Custom value formatting
 
 Use the `value` parameter to customize cell display. This adds ANSI colors (green for best, red for worst):

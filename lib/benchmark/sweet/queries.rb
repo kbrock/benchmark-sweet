@@ -2,7 +2,7 @@ module Benchmark
   module Sweet
     module Queries
       def run_queries
-        cntr = ::Benchmark::Sweet::Queries::QueryCounter.new
+        cntr = ::Benchmark::Sweet::Queries::QueryCounter.new(capture_sql: !!@sql_filename)
         cntr.sub do
           items.each do |entry|
             entry.block.call
@@ -11,6 +11,7 @@ module Benchmark
             add_entry entry.label, "queries", values[:sql_count]
             add_entry entry.label, "ignored", values[:ignored_count]
             add_entry entry.label, "cached",  values[:cache_count]
+            @sql_entries[entry.label] = values[:sql_queries] if @sql_filename
             unless options[:quiet]
               printf "%20s: %3d queries %5d ar_objects", entry.label, values[:sql_count], values[:instance_count]
               printf " (%d ignored)", values[:ignored_count] if values[:ignored_count] > 0
@@ -34,7 +35,8 @@ module Benchmark
         IGNORED_STATEMENTS = %w(CACHE SCHEMA).freeze
         IGNORED_QUERIES    = /^(?:ROLLBACK|BEGIN|COMMIT|SAVEPOINT|RELEASE)/.freeze
 
-        def initialize
+        def initialize(capture_sql: false)
+          @capture_sql = capture_sql
           clear
         end
 
@@ -46,8 +48,9 @@ module Benchmark
               @instances[:ignored_count] += 1
             else
               @instances[:sql_count] += 1
+              @instances[:sql_queries] << [payload[:sql], payload[:type_casted_binds]] if @capture_sql
             end
-          else
+          elsif payload[:record_count]
             @instances[:instance_count] += payload[:record_count]
           end
         end
@@ -58,6 +61,7 @@ module Benchmark
 
         def clear
           @instances = {cache_count: 0, ignored_count: 0, sql_count: 0, instance_count: 0}
+          @instances[:sql_queries] = [] if @capture_sql
         end
 
         def get_clear; @instances.tap { clear }; end
