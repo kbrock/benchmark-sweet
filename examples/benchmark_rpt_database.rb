@@ -121,6 +121,5 @@ Benchmark.items(metrics: %w(ips memsize), memory: 3, warmup: 1, time: 3, quiet: 
   # value is the text that is displayed in the cell of the table (default: "central_tendancy units")
   x.report_with grouping: ->(l){ "#{l[:version]} (#{l[:count]} records)"}, row: :method, column: :metric, value: VALUE_TO_S
 
-  # defined above. benchmark sweet pretty much depends upon this json file
-  x.save_file ENV["SAVE_FILE"] ? ENV["SAVE_FILE"] : $0.sub(/\.rb$/, '.json')
+  x.save_file if ENV["SAVE_FILE"].to_s =~ /t/i
 end

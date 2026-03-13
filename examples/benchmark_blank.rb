@@ -51,5 +51,5 @@ Benchmark.items(metrics: %w(ips)) do |x|
   x.compare_by :data
   x.report_with grouping: nil, row: :method, column: :data
 
-  x.save_file (ENV["SAVE_FILE"] == "true") ? $0.sub(/\.rb$/, '.json') : ENV["SAVE_FILE"] if ENV["SAVE_FILE"]
+  x.save_file if ENV["SAVE_FILE"].to_s =~ /t/i
 end

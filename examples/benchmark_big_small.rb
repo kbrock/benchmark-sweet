@@ -79,5 +79,5 @@ else
   x.report_with grouping: [:version, :metric], sort: true, row: :method, column: :data
 end
 
-  x.save_file (ENV["SAVE_FILE"] == "true") ? $0.sub(/\.rb$/, '.json') : ENV["SAVE_FILE"] if ENV["SAVE_FILE"]
+  x.save_file if ENV["SAVE_FILE"].to_s =~ /t/i
 end
