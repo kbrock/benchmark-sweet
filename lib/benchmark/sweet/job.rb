@@ -92,6 +92,16 @@ module Benchmark
         @filename = filename
       end
 
+      # Save SQL patterns and EXPLAIN plans to a diffable text file.
+      # Requires the queries metric to be enabled.
+      # @param filename [String] path to the output file (e.g. "results/mp1.sql")
+      # @param explain [Boolean] whether to run EXPLAIN on captured queries (default: true)
+      def save_sql(filename, explain: true)
+        @sql_filename = filename
+        @sql_entries = {}
+        @sql_explain = explain
+      end
+
       # &block - a lambda that accepts a label and a stats object
       # returns a unique object for each set of metrics that should be compared with each other
       #
@@ -145,6 +155,46 @@ module Benchmark
         JSON.load(IO.read(filename)).each do |v|
           n = normalize_label(v["name"].transform_keys(&:to_sym))
           add_entry n, v["metric"], v["samples"]
+        end
+
+      end
+
+      def write_sql(filename = @sql_filename)
+        return unless filename && @sql_entries&.any?
+
+        all_labels = @sql_entries.keys
+        all_keys = all_labels.first.keys
+        constant_keys = all_keys.select { |k| all_labels.map { |l| l[k] }.uniq.size == 1 }
+        varying_keys = all_keys - constant_keys
+
+        File.open(filename, "w") do |f|
+          constant_keys.each { |k| f.puts "# #{k}: #{all_labels.first[k]}" }
+          f.puts ""
+
+          @sql_entries.each do |label, queries|
+            header = varying_keys.map { |k| label[k] }.join(": ")
+            f.puts "== #{header} =="
+
+            if queries.empty?
+              f.puts "(no queries)"
+            else
+              # Group by normalized SQL to dedup, keep first raw entry for EXPLAIN
+              grouped = queries.each_with_object({}) do |(raw_sql, binds), hash|
+                normalized = normalize_sql(raw_sql)
+                hash[normalized] ||= { count: 0, raw_sql: raw_sql, binds: binds }
+                hash[normalized][:count] += 1
+              end
+
+              grouped.each do |normalized, info|
+                prefix = info[:count] > 1 ? "(#{info[:count]}x) " : ""
+                f.puts "SQL: #{prefix}#{normalized}"
+                if @sql_explain
+                  explain_sql(info[:raw_sql], info[:binds]).each { |line| f.puts "PLAN: #{line}" }
+                end
+              end
+            end
+            f.puts ""
+          end
         end
 
       end
@@ -231,6 +281,27 @@ module Benchmark
 
       def create_stats(samples)
         Benchmark::IPS::Stats::SD.new(Array(samples))
+      end
+
+      def normalize_sql(sql)
+        sql
+          .gsub(/'[^']*'/, "?")                    # quoted strings
+          .gsub(/= \d+/, "= ?")                    # = 123
+          .gsub(/IN \([\d, ]+\)/, "IN (?)")        # IN (1, 2, 3)
+          .gsub(/LIMIT \d+/, "LIMIT ?")            # LIMIT 1
+          .gsub(/OFFSET \d+/, "OFFSET ?")          # OFFSET 5
+          .gsub(/VALUES \([^)]+\)/, "VALUES (?)")  # VALUES (...)
+      end
+
+      def explain_sql(sql, binds = nil)
+        conn = ActiveRecord::Base.connection
+        if binds&.any?
+          conn.exec_query("EXPLAIN #{sql}", "EXPLAIN", binds).rows.map { |r| r.join(" ") }
+        else
+          conn.explain(sql).strip.split("\n")
+        end
+      rescue => e
+        ["EXPLAIN failed: #{e.message}"]
       end
     end
   end

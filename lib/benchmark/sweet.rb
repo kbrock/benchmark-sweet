@@ -17,6 +17,7 @@ module Benchmark
       job.load_entries
       job.run
       job.save_entries
+      job.write_sql
 
       job.run_report
 
