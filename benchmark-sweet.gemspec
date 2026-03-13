@@ -40,6 +40,7 @@ EOF
   spec.add_development_dependency "activerecord"
   spec.add_development_dependency "sqlite3"
 
+  spec.add_runtime_dependency "benchmark"
   spec.add_runtime_dependency "benchmark-ips", "~> 2.14"
   spec.add_runtime_dependency "memory_profiler", "~> 1.1"
 end
