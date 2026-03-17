@@ -224,7 +224,7 @@ module Benchmark
         # TODO: may want to override these values
         run_ips     if ips?      && (force? || !@entries.dig(IPS_METRICS.first, items.first.label))
         run_memory  if memory?   && (force? || !@entries.dig(MEMORY_METRICS.first, items.first.label))
-        run_queries if database? && (force? || !@entries.dig(DATABASE_METRICS.first, items.first.label))
+        run_queries if database? && (force? || @sql_filename || !@entries.dig(DATABASE_METRICS.first, items.first.label))
       end
 
       # ? metric => label(:version, :method) => stats
