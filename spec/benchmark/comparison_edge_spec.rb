@@ -40,10 +40,90 @@ RSpec.describe Benchmark::Sweet::Comparison do
     end
 
     it "uses custom worst when provided" do
-      stats = make_stats([100.0, 110.0])
-      worst = make_stats([100.0, 110.0])
-      comp = make_comparison("ips", {}, stats, 0, 2, stats, worst)
-      expect(comp.worst?).to be true
+      fast = make_stats([100.0, 102.0, 101.0, 100.5, 101.5])
+      mid  = make_stats([50.0, 52.0, 51.0, 50.5, 51.5])
+      slow = make_stats([10.0, 12.0, 11.0, 10.5, 11.5])
+      comp = make_comparison("ips", {}, mid, 1, 3, fast, slow)
+      expect(comp.worst?).to be false
+      comp2 = make_comparison("ips", {}, slow, 2, 3, fast, slow)
+      expect(comp2.worst?).to be true
+    end
+
+    it "returns false when overlapping with best" do
+      stats_a = make_stats([100.0, 102.0, 101.0])
+      stats_b = make_stats([99.0, 101.0, 100.0])
+      comp = make_comparison("ips", {}, stats_b, 1, 2, stats_a, stats_b)
+      expect(comp.worst?).to be false
+    end
+  end
+
+  describe "#all_same?" do
+    it "returns true when best and worst overlap" do
+      stats_a = make_stats([100.0, 102.0, 101.0])
+      stats_b = make_stats([99.0, 101.0, 100.0])
+      comp = make_comparison("ips", {}, stats_a, 0, 2, stats_a, stats_b)
+      expect(comp.all_same?).to be true
+    end
+
+    it "returns true when best and worst have identical single samples" do
+      stats_a = make_stats([1.0])
+      stats_b = make_stats([1.0])
+      comp = make_comparison("queries", {}, stats_a, 0, 2, stats_a, stats_b)
+      expect(comp.all_same?).to be true
+    end
+
+    it "returns false when best and worst are distinct" do
+      fast = make_stats([100.0, 110.0, 105.0])
+      slow = make_stats([10.0, 11.0, 10.5])
+      comp = make_comparison("ips", {}, fast, 0, 2, fast, slow)
+      expect(comp.all_same?).to be false
+    end
+
+    it "returns false when single samples differ" do
+      stats_a = make_stats([1.0])
+      stats_b = make_stats([2.0])
+      comp = make_comparison("queries", {}, stats_a, 0, 2, stats_a, stats_b)
+      expect(comp.all_same?).to be false
+    end
+
+    it "returns false when worst is not provided" do
+      stats = make_stats([100.0])
+      comp = make_comparison("ips", {}, stats, 0, 1, stats)
+      expect(comp.all_same?).to be false
+    end
+  end
+
+  describe "#best? with all_same?" do
+    it "returns false when all entries overlap" do
+      stats_a = make_stats([100.0, 102.0, 101.0])
+      stats_b = make_stats([99.0, 101.0, 100.0])
+      comp = make_comparison("ips", {}, stats_a, 0, 2, stats_a, stats_b)
+      expect(comp.best?).to be false
+      expect(comp.mode).to eq(:same)
+    end
+
+    it "returns true when entries are distinct" do
+      fast = make_stats([100.0, 110.0, 105.0])
+      slow = make_stats([10.0, 11.0, 10.5])
+      comp = make_comparison("ips", {}, fast, 0, 2, fast, slow)
+      expect(comp.best?).to be true
+      expect(comp.mode).to eq(:best)
+    end
+  end
+
+  describe "#notable?" do
+    it "returns false when all entries overlap" do
+      stats_a = make_stats([100.0, 102.0, 101.0])
+      stats_b = make_stats([99.0, 101.0, 100.0])
+      comp = make_comparison("ips", {}, stats_a, 0, 2, stats_a, stats_b)
+      expect(comp.notable?).to be false
+    end
+
+    it "returns true when entries are distinct" do
+      fast = make_stats([100.0, 110.0, 105.0])
+      slow = make_stats([10.0, 11.0, 10.5])
+      comp = make_comparison("ips", {}, fast, 0, 2, fast, slow)
+      expect(comp.notable?).to be true
     end
   end
 

@@ -32,7 +32,8 @@ module Benchmark
         @mode ||= best? ? :best : overlaps? ? :same : diff_error ? :slowerish : :slower
       end
 
-      def best? ; !baseline || (baseline == stats) ; end
+      # @return true if this is the best entry AND it is distinguishable from the worst
+      def best? ; !baseline || (baseline == stats && !all_same?) ; end
 
       # @return true if it is basically the same as the best
       def overlaps?
@@ -42,11 +43,23 @@ module Benchmark
       end
 
       def worst?
+        return false if overlaps?
         if @worst
           stats.overlaps?(@worst)
         else
           slowdown == Float::INFINITY || (total.to_i - 1 == offset.to_i && slowdown > 1)
         end
+      end
+
+      # @return [Boolean] true if all entries in this comparison group overlap (no meaningful differences)
+      def all_same?
+        return false unless @worst && baseline
+        (baseline.central_tendency == @worst.central_tendency) || baseline.overlaps?(@worst)
+      end
+
+      # @return true if this row has meaningful differences worth displaying
+      def notable?
+        !all_same?
       end
 
       def slowdown
