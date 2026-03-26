@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- `Comparison#all_same?` — true when all entries in a comparison group overlap (no meaningful differences)
+- `Comparison#notable?` — true when meaningful differences exist, useful for filtering uninteresting rows
+- `comparison_values` passes worst_stats to Comparison for best/worst boundary detection
+
+### Fixed
+- No longer marks best or worst when all entries are within error of each other
+- `worst?` returns false when the entry overlaps with the best (was incorrectly marking as worst)
+
 ## [0.3.0] - 2026-02-07
 
 ### Added
