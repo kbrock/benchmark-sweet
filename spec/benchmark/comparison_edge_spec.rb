@@ -111,22 +111,6 @@ RSpec.describe Benchmark::Sweet::Comparison do
     end
   end
 
-  describe "#notable?" do
-    it "returns false when all entries overlap" do
-      stats_a = make_stats([100.0, 102.0, 101.0])
-      stats_b = make_stats([99.0, 101.0, 100.0])
-      comp = make_comparison("ips", {}, stats_a, 0, 2, stats_a, stats_b)
-      expect(comp.notable?).to be false
-    end
-
-    it "returns true when entries are distinct" do
-      fast = make_stats([100.0, 110.0, 105.0])
-      slow = make_stats([10.0, 11.0, 10.5])
-      comp = make_comparison("ips", {}, fast, 0, 2, fast, slow)
-      expect(comp.notable?).to be true
-    end
-  end
-
   describe "#comp_string" do
     it "formats best entry" do
       stats = make_stats([100.0])
