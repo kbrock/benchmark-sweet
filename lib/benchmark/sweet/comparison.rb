@@ -57,11 +57,6 @@ module Benchmark
         (baseline.central_tendency == @worst.central_tendency) || baseline.overlaps?(@worst)
       end
 
-      # @return true if this row has meaningful differences worth displaying
-      def notable?
-        !all_same?
-      end
-
       def slowdown
         return @slowdown if @slowdown
         @slowdown, @diff_error = stats.slowdown(baseline)

@@ -322,6 +322,35 @@ versions, generate one file per variant and diff:
 diff results/v1.sql results/v2.sql
 ```
 
+## Filtering unremarkable rows with `skip_unremarkable!`
+
+When comparing many configurations, some operations may show no meaningful difference —
+all entries are within error of each other. `skip_unremarkable!` removes these from the output
+so you can focus on what actually matters:
+
+```ruby
+Benchmark.items(metrics: %w(ips queries rows)) do |x|
+  x.compare_by :operation
+  x.report_with row: :operation, column: :config, grouping: :shape
+  x.skip_unremarkable!
+
+  x.metadata(config: "mp1") do
+    x.report(operation: "parent")      { node.parent }
+    x.report(operation: "descendants") { node.descendants.to_a }
+  end
+  x.metadata(config: "mp2") do
+    x.report(operation: "parent")      { node.parent }
+    x.report(operation: "descendants") { node.descendants.to_a }
+  end
+end
+```
+
+If `parent` returns the same IPS and query count for both mp1 and mp2, that row is
+dropped entirely. Only `descendants` — where the configs actually differ — appears in the table.
+
+This works per comparison group: if queries are identical but IPS differs, the IPS row
+is kept and the queries row is dropped.
+
 ## Custom value formatting
 
 Use the `value` parameter to customize cell display. This adds ANSI colors (green for best, red for worst):

@@ -48,6 +48,7 @@ module Benchmark
         @grouping = nil
         @report_options = {}
         @report_block = nil
+        @skip_unremarkable = false
         # current item metadata
         @meta = {}
       end
@@ -113,6 +114,11 @@ module Benchmark
       #
       def compare_by(*symbol, &block)
         @grouping = symbol.empty? ? block : Proc.new { |label, _value| symbol.map { |s| label[s] } }
+      end
+
+      # Skip comparisons where all entries are within error of each other
+      def skip_unremarkable!
+        @skip_unremarkable = true
       end
 
       # Setup the testing framework
@@ -260,7 +266,8 @@ module Benchmark
             total = sorted.count
 
             # TODO: fix ranking. i / total doesn't work as well when there is only 1 entry or some entries are the same
-            sorted.each_with_index.map { |(label, stats), i| Comparison.new(metric_name, label, stats, i, total, best_stats, worst_stats) }
+            comparisons = sorted.each_with_index.map { |(label, stats), i| Comparison.new(metric_name, label, stats, i, total, best_stats, worst_stats) }
+            @skip_unremarkable && comparisons.first&.all_same? ? [] : comparisons
           end
         end
       end

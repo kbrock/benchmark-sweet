@@ -136,6 +136,71 @@ RSpec.describe Benchmark::Sweet::Job do
     end
   end
 
+  describe "#skip_unremarkable!" do
+    it "removes comparisons where all entries are the same" do
+      job = described_class.new(metrics: %w(queries))
+      job.add_entry({operation: "parent"}, "queries", [1.0])
+      job.add_entry({operation: "children"}, "queries", [1.0])
+      job.skip_unremarkable!
+
+      comparisons = job.comparison_values
+      expect(comparisons).to be_empty
+    end
+
+    it "keeps comparisons where entries differ" do
+      job = described_class.new(metrics: %w(ips))
+      job.add_entry({operation: "fast"}, "ips", [1000.0])
+      job.add_entry({operation: "slow"}, "ips", [100.0])
+      job.skip_unremarkable!
+
+      comparisons = job.comparison_values
+      expect(comparisons.length).to eq(2)
+    end
+
+    it "filters per comparison group with compare_by" do
+      job = described_class.new(metrics: %w(queries))
+      job.compare_by :shape
+
+      # wide: both have 1 query — unremarkable
+      job.add_entry({shape: "wide", operation: "parent"}, "queries", [1.0])
+      job.add_entry({shape: "wide", operation: "children"}, "queries", [1.0])
+      # deep: different query counts — remarkable
+      job.add_entry({shape: "deep", operation: "parent"}, "queries", [1.0])
+      job.add_entry({shape: "deep", operation: "children"}, "queries", [3.0])
+      job.skip_unremarkable!
+
+      comparisons = job.comparison_values
+      # Only deep comparisons survive
+      expect(comparisons.length).to eq(2)
+      expect(comparisons.map { |c| c[:shape] }.uniq).to eq(["deep"])
+    end
+
+    it "keeps only groups with meaningful differences" do
+      job = described_class.new(metrics: %w(ips))
+      job.compare_by :operation
+
+      # parent: mp1 and mp2 are the same — unremarkable
+      job.add_entry({operation: "parent", config: "mp1"}, "ips", [10_000.0])
+      job.add_entry({operation: "parent", config: "mp2"}, "ips", [10_000.0])
+      # descendants: mp1 and mp2 differ — remarkable
+      job.add_entry({operation: "descendants", config: "mp1"}, "ips", [1000.0])
+      job.add_entry({operation: "descendants", config: "mp2"}, "ips", [5000.0])
+      job.skip_unremarkable!
+
+      comparisons = job.comparison_values
+      expect(comparisons.map { |c| c[:operation] }.uniq).to eq(["descendants"])
+    end
+
+    it "does not filter when not enabled" do
+      job = described_class.new(metrics: %w(queries))
+      job.add_entry({operation: "parent"}, "queries", [1.0])
+      job.add_entry({operation: "children"}, "queries", [1.0])
+
+      comparisons = job.comparison_values
+      expect(comparisons.length).to eq(2)
+    end
+  end
+
   describe "serialization" do
     it "round-trips entries through save and load" do
       Tempfile.create(["benchmark", ".json"]) do |f|

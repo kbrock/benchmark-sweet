@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 - `Comparison#all_same?` — true when all entries in a comparison group overlap (no meaningful differences)
-- `Comparison#notable?` — true when meaningful differences exist, useful for filtering uninteresting rows
+- `Job#skip_unremarkable!` — filters out comparison groups where all entries are within error of each other
 - `comparison_values` passes worst_stats to Comparison for best/worst boundary detection
 
 ### Fixed
