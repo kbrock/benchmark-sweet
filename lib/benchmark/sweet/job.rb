@@ -256,10 +256,11 @@ module Benchmark
             sorted.reverse! if HIGHER_BETTER.include?(metric_name)
 
             _best_label, best_stats = sorted.first
+            _worst_label, worst_stats = sorted.last
             total = sorted.count
 
             # TODO: fix ranking. i / total doesn't work as well when there is only 1 entry or some entries are the same
-            sorted.each_with_index.map { |(label, stats), i| Comparison.new(metric_name, label, stats, i, total, best_stats) }
+            sorted.each_with_index.map { |(label, stats), i| Comparison.new(metric_name, label, stats, i, total, best_stats, worst_stats) }
           end
         end
       end
