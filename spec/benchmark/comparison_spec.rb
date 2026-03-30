@@ -95,6 +95,75 @@ RSpec.describe Benchmark::Sweet::Comparison do
     end
   end
 
+  describe "#comp_short with color" do
+    it "returns plain text by default" do
+      comp = make_comparison("ips", {method: "fast"}, fast_stats, 0, 1, fast_stats)
+      expect(comp.comp_short).not_to include("\e[")
+    end
+
+    it "wraps in ANSI color when color: true" do
+      comp = make_comparison("ips", {method: "fast"}, fast_stats, 0, 2, fast_stats)
+      result = comp.comp_short(color: true)
+      expect(result).to start_with("\e[32m")
+      expect(result).to end_with("\e[0m")
+    end
+
+    it "wraps slower entries in red when color: true" do
+      comp = make_comparison("ips", {method: "slow"}, slow_stats, 1, 2, fast_stats)
+      result = comp.comp_short(color: true)
+      expect(result).to include("\e[")
+      expect(result).to end_with("\e[0m")
+    end
+  end
+
+  describe "#comp_bar" do
+    it "returns a full solid bar for best" do
+      comp = make_comparison("ips", {method: "fast"}, fast_stats, 0, 2, fast_stats)
+      result = comp.comp_bar(width: 10)
+      expect(result).to eq("██████████")
+    end
+
+    it "returns a full solid bar when no baseline" do
+      comp = make_comparison("ips", {method: "only"}, fast_stats, 0, 1, nil)
+      result = comp.comp_bar(width: 10)
+      expect(result).to eq("██████████")
+    end
+
+    it "returns a partial bar with shading for slower entries" do
+      comp = make_comparison("ips", {method: "slow"}, slow_stats, 1, 2, fast_stats)
+      result = comp.comp_bar(width: 10)
+      expect(result).to include("█")
+      expect(result).to include("░")
+      expect(result.length).to eq(10)
+    end
+
+    it "returns a full solid bar for overlapping entries" do
+      comp = make_comparison("ips", {method: "same"}, same_stats, 1, 2, fast_stats)
+      result = comp.comp_bar(width: 10)
+      expect(result).to eq("██████████")
+    end
+
+    it "wraps in ANSI color when color: true" do
+      comp = make_comparison("ips", {method: "fast"}, fast_stats, 0, 2, fast_stats)
+      result = comp.comp_bar(width: 10, color: true)
+      expect(result).to start_with("\e[32m")
+      expect(result).to end_with("\e[0m")
+    end
+
+    it "returns plain text when color: false" do
+      comp = make_comparison("ips", {method: "fast"}, fast_stats, 0, 2, fast_stats)
+      result = comp.comp_bar(width: 10, color: false)
+      expect(result).not_to include("\e[")
+    end
+  end
+
+  describe "#colorize" do
+    it "wraps string in ANSI color code" do
+      comp = make_comparison("ips", {method: "fast"}, fast_stats, 0, 2, fast_stats)
+      expect(comp.colorize("hello")).to eq("\e[32mhello\e[0m")
+    end
+  end
+
   describe "#[]" do
     let(:label) { {method: "fast", data: "nil"} }
     let(:comp) { make_comparison("ips", label, fast_stats, 0, 1, fast_stats) }

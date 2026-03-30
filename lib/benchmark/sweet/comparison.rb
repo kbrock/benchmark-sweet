@@ -17,6 +17,7 @@ module Benchmark
       def [](field)
         case field
         when :metric      then metric
+        when :comp_bar    then comp_bar
         when :comp_short  then comp_short
         when :comp_string then comp_string
         when :label       then label  # not sure if this one makes sense
@@ -83,18 +84,25 @@ module Benchmark
         end
       end
 
-      # I tend to call with:
-      #   c.comp_short("\033[#{c.color}m#{c.central_tendency.round(1)} #{c.units}\e[0m") # "\033[31m#{value}\e[0m"
-      def comp_short(value = nil)
+      def comp_short(value = nil, color: false)
         value ||= "#{central_tendency.round(1)} #{units}"
-        case mode
+        result = case mode
         when :best, :same
           value
-        when :slower 
+        when :slower
           "%s - %.2fx (± %.2f)" % [value, slowdown, error]
         when :slowerish
           "%s - %.2fx" % [value, slowdown]
         end
+        color ? colorize(result) : result
+      end
+
+      def comp_bar(width: 20, color: false)
+        fill = (baseline && !overlaps?) ? (width.to_f / slowdown).round : width
+        fill = fill.clamp(0, width)
+        shade = width - fill
+        bar = "█" * fill + "░" * shade
+        color ? colorize(bar) : bar
       end
 
       def color
@@ -107,6 +115,10 @@ module Benchmark
         else
           ";0"
         end
+      end
+
+      def colorize(str)
+        "\e[#{color}m#{str}\e[0m"
       end
     end
   end
