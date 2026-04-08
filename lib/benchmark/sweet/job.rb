@@ -49,6 +49,8 @@ module Benchmark
         @report_options = {}
         @report_block = nil
         @skip_unremarkable = false
+        @format = :markdown
+        @report_output = nil
         # current item metadata
         @meta = {}
       end
@@ -93,10 +95,18 @@ module Benchmark
         @filename = filename
       end
 
-      # Save SQL patterns and EXPLAIN plans to a diffable text file.
-      # Requires the queries metric to be enabled.
-      # @param filename [String] path to the output file (e.g. "results/mp1.sql")
-      # @param explain [Boolean] whether to run EXPLAIN on captured queries (default: true)
+      # Set the report output format (:markdown, :html, or a class)
+      def format(fmt = nil)
+        @format = fmt if fmt
+        @format
+      end
+
+      # Set the report output destination (nil = stdout, filename = file)
+      def report_output(filename = nil)
+        @report_output = filename if filename
+        @report_output
+      end
+
       def save_sql(filename, explain: true)
         @sql_filename = filename
         @sql_entries = {}
@@ -238,16 +248,26 @@ module Benchmark
       # @returns [Hash<String,Hash<String,Comparison>>] Same as entries, but contains comparisons not Stats
       def run_report
         comparison_values.tap do |results|
-          display_report(results)
+          write_report(results)
         end
       end
 
-      def display_report(comparisons)
-        if !@report_block || @report_block.arity == 2
-          Benchmark::Sweet.table(comparisons, **@report_options, &@report_block)
-        else
-          @report_block.call(comparisons)
-        end
+      def write_report(comparisons)
+        formatter = resolve_formatter
+        formatter.grouping = @report_options[:grouping]
+        formatter.row = @report_options[:row] if @report_options[:row]
+        formatter.column = @report_options[:column] if @report_options[:column]
+        formatter.sort = @report_options[:sort] if @report_options[:sort]
+        formatter.value = @report_options[:value] if @report_options[:value]
+        formatter.title = File.basename(@report_output.to_s, ".*") if @report_output && formatter.respond_to?(:title=)
+
+        io = case @report_output
+             when nil, "-" then $stdout
+             else File.open(@report_output, "w")
+             end
+        formatter.render(comparisons, io)
+      ensure
+        io.close if io.is_a?(File)
       end
 
       # of note, this groups with @grouping (defined by group_by)
@@ -273,6 +293,21 @@ module Benchmark
       end
 
       private
+
+      def resolve_formatter
+        case @format
+        when :html
+          require "benchmark/sweet/html_report"
+          Benchmark::Sweet::HtmlReport.new
+        when :markdown
+          require "benchmark/sweet/markdown_report"
+          Benchmark::Sweet::MarkdownReport.new
+        when Class
+          @format.new
+        else
+          @format
+        end
+      end
 
       def validate_metrics(metric_options)
         if !(invalid = metric_options - ALL_METRICS).empty?
