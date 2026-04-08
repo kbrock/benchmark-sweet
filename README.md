@@ -315,12 +315,29 @@ end
 ```
 
 SQL values are normalized to `?` so patterns are stable across runs. Duplicate queries
-within an operation are collapsed with a count. To compare across configurations or
-versions, generate one file per variant and diff:
+within an operation are collapsed with a count.
+
+### Comparing SQL across configs or versions
+
+Generate one `.sql` file per variant, then use `sweet_sql_diff` to compare:
 
 ```bash
-diff results/v1.sql results/v2.sql
+sweet_sql_diff results/read_bench-mp2-current.sql results/read_bench-mp3-current.sql
 ```
+
+```
+SQL Comparison: read_bench-mp2-current vs read_bench-mp3-current
+============================================================
+
+== wide: at_depth(+1) == DIFFERS
+  read_bench-mp2-current: SELECT ... WHERE ... AND ((LENGTH(...) - LENGTH(REPLACE(...)) -1) = $1)
+  read_bench-mp3-current: SELECT ... WHERE ... AND ((LENGTH(...) - LENGTH(REPLACE(...))) = $1)
+
+============================================================
+Summary: 30 identical, 9 different out of 39 operations
+```
+
+Operations with identical SQL are skipped. Only differences are shown, with EXPLAIN plans when available. Accepts 2+ files for multi-way comparison.
 
 ## Filtering unremarkable rows with `skip_unremarkable!`
 

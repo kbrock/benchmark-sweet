@@ -33,6 +33,8 @@ EOF
   spec.files         = Dir.chdir(File.expand_path('..', __FILE__)) do
     `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
   end
+  spec.bindir        = "exe"
+  spec.executables    = ["sweet_sql_diff"]
   spec.require_paths = ["lib"]
 
   spec.add_development_dependency "rake", ">= 12.3.3"

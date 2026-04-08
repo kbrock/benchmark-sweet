@@ -1,12 +1,12 @@
-RSpec.describe Benchmark::Sweet do
-  describe ".to_table" do
+require "benchmark/sweet/markdown_report"
+
+RSpec.describe Benchmark::Sweet::MarkdownReport do
+  describe "#print_table" do
     def capture_table(rows)
       output = StringIO.new
-      $stdout = output
-      Benchmark::Sweet.to_table(rows)
+      report = Benchmark::Sweet::MarkdownReport.new
+      report.send(:print_table, nil, rows, out: output)
       output.string
-    ensure
-      $stdout = STDOUT
     end
 
     def table_lines(rows)
