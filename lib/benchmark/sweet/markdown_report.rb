@@ -25,8 +25,6 @@ module Benchmark
       def print_table(header_value, table_rows, out: $stdout)
         return if table_rows.empty?
 
-        strip_ansi = ->(s) { s.to_s.gsub(/\e\[[^m]*m/, '') }
-
         headers = table_rows.flat_map(&:keys).uniq
 
         formatted_rows = table_rows.map do |row_data|
@@ -35,7 +33,7 @@ module Benchmark
             if val.nil?
               ""
             elsif val.is_a?(Benchmark::Sweet::Comparison)
-              value.call(val)
+              value.call(val, color: false)
             else
               val.to_s
             end
@@ -43,14 +41,13 @@ module Benchmark
         end
 
         widths = headers.each_with_index.map do |h, i|
-          values_max = formatted_rows.map { |r| strip_ansi.call(r[i]).length }.max || 0
-          [strip_ansi.call(h.to_s).length, values_max, 3].max
+          values_max = formatted_rows.map { |r| r[i].length }.max || 0
+          [h.to_s.length, values_max, 3].max
         end
 
         pad = ->(str, width, right) {
-          visible = strip_ansi.call(str).length
-          padding = " " * [width - visible, 0].max
-          right ? padding + str.to_s : str.to_s + padding
+          padding = " " * [width - str.length, 0].max
+          right ? padding + str : str + padding
         }
 
         out.puts "", "#{header_value}", "" if header_value
@@ -61,9 +58,8 @@ module Benchmark
         end
       end
 
-      def render_cell(c)
-        value = format_number(c.central_tendency)
-        c.colorize("#{value} #{c.units}")
+      def render_cell(c, color: false)
+        c.comp_short("#{format_number(c.central_tendency)} #{c.units}", color: color)
       end
 
       def format_number(num)
