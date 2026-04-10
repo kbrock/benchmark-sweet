@@ -370,12 +370,36 @@ is kept and the queries row is dropped.
 
 ## Custom value formatting
 
-Use the `value` parameter to customize cell display. This adds ANSI colors (green for best, red for worst):
+Use the `value` parameter to customize cell display. `Comparison#comp_short` is the default formatter and already accepts a `color:` kwarg — wrap it in a lambda that respects the color flag from the report:
 
 ```ruby
-VALUE_TO_S = ->(m) { m.comp_short("\e[#{m.color}m#{m.central_tendency.round(1)} #{m.units}\e[0m") }
-x.report_with row: :method, column: :metric, value: VALUE_TO_S
+VALUE = ->(c, color: false) { c.comp_short(color: color) }
+x.report_with row: :method, column: :metric, value: VALUE
 ```
+
+To show only the value without slowdown text:
+
+```ruby
+VALUE = ->(c, color: false) {
+  c.comp_short("#{c.central_tendency.round(1)} #{c.units}", color: color)
+}
+```
+
+`comp_short(value, color:)` takes an optional pre-formatted value (defaults to `"<central_tendency> <units>"`), appends slowdown info for non-best entries, and applies color if requested.
+
+Reports decide whether to pass `color: true`:
+
+- **HtmlReport** — `color: true` when 4+ columns (color helps scan many options); plain when 2-3 columns (just bolds the best)
+- **MarkdownReport** — always plain (markdown files don't render ANSI escapes)
+- **Default stdout** — plain
+
+If your formatter unconditionally adds ANSI codes (instead of respecting `color:`), they will appear as garbage in markdown files.
+
+### Output destinations
+
+- `x.format(:markdown)` / `x.format(:html)` — choose the report format (default: `:markdown`)
+- `x.report_output("path.md")` — write to file instead of stdout
+- `x.report_output(nil)` or omitted — write to stdout
 
 ## Options
 
