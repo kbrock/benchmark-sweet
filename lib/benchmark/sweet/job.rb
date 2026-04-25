@@ -159,8 +159,29 @@ module Benchmark
         @entries.dig(metric, label)
       end
 
+      # Filter entries by label values for reporting. Does not modify stored data.
+      # Hash: inclusion filter. Block: custom predicate on label.
+      # Examples:
+      #   filter config: %w[mp1 mp3 ltree]
+      #   filter { |label| !label[:operation].start_with?("ancestor_ids") }
+      #   filter(config: %w[mp1 mp3]) { |label| label[:operation] != "ancestor_ids cached" }
+      def filter(criteria = nil, &block)
+        @filter_criteria = criteria
+        @filter_block = block
+      end
+
       def relevant_entries
-        relevant_metric_names.map { |n| [n, @entries[n] ] }
+        entries = relevant_metric_names.map { |n| [n, @entries[n]] }
+        return entries unless @filter_criteria || @filter_block
+
+        entries.map do |metric_name, metric_entries|
+          filtered = metric_entries.select do |label, _stat|
+            next false if @filter_criteria && !@filter_criteria.all? { |k, v| Array(v).include?(label[k].to_s) }
+            next false if @filter_block && !@filter_block.call(label)
+            true
+          end
+          [metric_name, filtered]
+        end
       end
       # serialization
 
