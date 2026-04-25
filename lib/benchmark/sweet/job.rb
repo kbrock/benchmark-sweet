@@ -123,6 +123,7 @@ module Benchmark
       #   x.compare_by :data
       #
       def compare_by(*symbol, &block)
+        @compare_by_keys = symbol unless symbol.empty?
         @grouping = symbol.empty? ? block : Proc.new { |label, _value| symbol.map { |s| label[s] } }
       end
 
@@ -233,6 +234,8 @@ module Benchmark
       end
 
       def run
+        return if items.empty?
+
         # run metrics if they are requested and haven't run yet
         # only run the suites that provide the data the user needs.
         # if the first node has the data, assumes all do
@@ -259,6 +262,7 @@ module Benchmark
         formatter.column = @report_options[:column] if @report_options[:column]
         formatter.sort = @report_options[:sort] if @report_options[:sort]
         formatter.value = @report_options[:value] if @report_options[:value]
+        formatter.baseline = @report_options[:baseline] if @report_options[:baseline] && formatter.respond_to?(:baseline=)
         formatter.title = File.basename(@report_output.to_s, ".*") if @report_output && formatter.respond_to?(:title=)
 
         io = case @report_output
@@ -274,8 +278,9 @@ module Benchmark
       # but then all data continues to the next step
       # this allows you to make comparisons across rows / columns / grouping
       def comparison_values
+        baseline_match = resolve_baseline(@report_options[:baseline])
+
         relevant_entries.flat_map do |metric_name, metric_entries|
-          # TODO: map these to Comparison(metric_name, label, stats) So we only have 1 type of lambda
           partitioned_metrics = grouping ? metric_entries.group_by(&grouping) : {nil => metric_entries}
           partitioned_metrics.flat_map do |_grouping_name, grouped_metrics|
             sorted = grouped_metrics.sort_by { |_n, e| e.central_tendency }
@@ -285,8 +290,12 @@ module Benchmark
             _worst_label, worst_stats = sorted.last
             total = sorted.count
 
-            # TODO: fix ranking. i / total doesn't work as well when there is only 1 entry or some entries are the same
-            comparisons = sorted.each_with_index.map { |(label, stats), i| Comparison.new(metric_name, label, stats, i, total, best_stats, worst_stats) }
+            reference_stats = if baseline_match
+              _label, stats = grouped_metrics.find { |label, _| baseline_match.all? { |k, v| label[k].to_s == v.to_s } }
+              stats
+            end
+
+            comparisons = sorted.each_with_index.map { |(label, stats), i| Comparison.new(metric_name, label, stats, i, total, best_stats, worst: worst_stats, reference: reference_stats) }
             @skip_unremarkable && comparisons.first&.all_same? ? [] : comparisons
           end
         end
@@ -294,11 +303,36 @@ module Benchmark
 
       private
 
+      # Resolve baseline to a label match hash.
+      # Hash: use as-is. String: derive the key from column/row vs compare_by.
+      # The baseline key is whichever of column/row is NOT in compare_by
+      # (i.e., the dimension that varies within a comparison group).
+      def resolve_baseline(baseline)
+        return baseline if baseline.is_a?(Hash)
+        return unless baseline
+
+        key = if @compare_by_keys
+          column = @report_options[:column]
+          row = @report_options[:row]
+          if column && !@compare_by_keys.include?(column)
+            column
+          elsif row && !@compare_by_keys.include?(row)
+            row
+          end
+        end
+        key ||= @report_options[:column]
+
+        key ? {key => baseline} : nil
+      end
+
       def resolve_formatter
         case @format
         when :html
           require "benchmark/sweet/html_report"
           Benchmark::Sweet::HtmlReport.new
+        when :chart
+          require "benchmark/sweet/chart_report"
+          Benchmark::Sweet::ChartReport.new
         when :markdown
           require "benchmark/sweet/markdown_report"
           Benchmark::Sweet::MarkdownReport.new

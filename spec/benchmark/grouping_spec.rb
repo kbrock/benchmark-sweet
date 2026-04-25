@@ -5,8 +5,8 @@ RSpec.describe Benchmark::Sweet do
     Benchmark::IPS::Stats::SD.new(Array(values))
   end
 
-  def make_comparison(metric, label, stats, offset = 0, total = 1, baseline = stats)
-    Benchmark::Sweet::Comparison.new(metric, label, stats, offset, total, baseline)
+  def make_comparison(metric, label, stats, offset = 0, total = 1, best = stats)
+    Benchmark::Sweet::Comparison.new(metric, label, stats, offset, total, best)
   end
 
   describe ".symbol_to_proc" do
