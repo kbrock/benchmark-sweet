@@ -84,8 +84,13 @@ RSpec.describe Benchmark::Sweet::Comparison do
       expect(comp.units).to eq("bytes")
     end
 
-    it "returns objs for unknown metrics" do
+    it "returns queries for queries metric" do
       comp = make_comparison("queries", {}, fast_stats, 0, 1, fast_stats)
+      expect(comp.units).to eq("queries")
+    end
+
+    it "returns objs for unknown metrics" do
+      comp = make_comparison("unknown_metric", {}, fast_stats, 0, 1, fast_stats)
       expect(comp.units).to eq("objs")
     end
   end

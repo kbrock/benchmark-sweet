@@ -1,7 +1,7 @@
 module Benchmark
   module Sweet
     class Comparison
-      UNITS = {"ips" => "i/s", "memsize" => "bytes", "memsize_retained" => "bytes"}.freeze
+      UNITS = {"ips" => "i/s", "memsize" => "bytes", "memsize_retained" => "bytes", "queries" => "queries", "rows" => "rows", "cached" => "queries"}.freeze
       attr_reader :label, :metric, :stats, :best, :worst, :reference
       attr_reader :offset, :total
       def initialize(metric, label, stats, offset, total, best, worst: nil, reference: nil)
@@ -18,6 +18,7 @@ module Benchmark
       # Value relative to a named baseline. >1.0 = faster/better, <1.0 = slower/worse.
       def ratio
         return nil unless @reference
+        return nil if @reference.central_tendency == 0
         stats.central_tendency / @reference.central_tendency
       end
 
