@@ -3,7 +3,7 @@
 module Benchmark
   module Sweet
     class HtmlReport
-      attr_accessor :grouping, :row, :column, :sort, :value, :title
+      attr_accessor :grouping, :row, :column, :sort, :value, :title, :cell
 
       def initialize
         @grouping = nil
@@ -12,12 +12,13 @@ module Benchmark
         @sort = false
         @value = method(:render_cell)
         @title = "Benchmark Report"
+        @cell = nil
       end
 
       def render(comparisons, io)
         tables_html = []
 
-        Benchmark::Sweet.table(comparisons, grouping: grouping, row: row, column: column, value: -> c { c }, sort: sort) do |header_value, table_rows|
+        Benchmark::Sweet.table(comparisons, grouping: grouping, row: row, column: column, cell: cell, value: -> c { c }, sort: sort) do |header_value, table_rows|
           next if table_rows.empty?
           tables_html << render_table(header_value, table_rows)
         end
@@ -49,6 +50,8 @@ module Benchmark
               html << "        <td class=\"row-label\">#{escape(val.to_s)}</td>\n"
             elsif val.nil?
               html << "        <td></td>\n"
+            elsif val.is_a?(Hash)
+              html << val.values.map { |v| value.call(v, color: use_color) }.join
             elsif val.is_a?(Benchmark::Sweet::Comparison)
               html << value.call(val, color: use_color)
             else

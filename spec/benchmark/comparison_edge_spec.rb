@@ -5,8 +5,8 @@ RSpec.describe Benchmark::Sweet::Comparison do
     Benchmark::IPS::Stats::SD.new(Array(values))
   end
 
-  def make_comparison(metric, label, stats, offset, total, baseline, worst = nil)
-    described_class.new(metric, label, stats, offset, total, baseline, worst)
+  def make_comparison(metric, label, stats, offset, total, best, worst: nil)
+    described_class.new(metric, label, stats, offset, total, best, worst: worst)
   end
 
   describe "#overlaps?" do
@@ -43,16 +43,16 @@ RSpec.describe Benchmark::Sweet::Comparison do
       fast = make_stats([100.0, 102.0, 101.0, 100.5, 101.5])
       mid  = make_stats([50.0, 52.0, 51.0, 50.5, 51.5])
       slow = make_stats([10.0, 12.0, 11.0, 10.5, 11.5])
-      comp = make_comparison("ips", {}, mid, 1, 3, fast, slow)
+      comp = make_comparison("ips", {}, mid, 1, 3, fast, worst: slow)
       expect(comp.worst?).to be false
-      comp2 = make_comparison("ips", {}, slow, 2, 3, fast, slow)
+      comp2 = make_comparison("ips", {}, slow, 2, 3, fast, worst: slow)
       expect(comp2.worst?).to be true
     end
 
     it "returns false when overlapping with best" do
       stats_a = make_stats([100.0, 102.0, 101.0])
       stats_b = make_stats([99.0, 101.0, 100.0])
-      comp = make_comparison("ips", {}, stats_b, 1, 2, stats_a, stats_b)
+      comp = make_comparison("ips", {}, stats_b, 1, 2, stats_a, worst: stats_b)
       expect(comp.worst?).to be false
     end
   end
@@ -61,28 +61,28 @@ RSpec.describe Benchmark::Sweet::Comparison do
     it "returns true when best and worst overlap" do
       stats_a = make_stats([100.0, 102.0, 101.0])
       stats_b = make_stats([99.0, 101.0, 100.0])
-      comp = make_comparison("ips", {}, stats_a, 0, 2, stats_a, stats_b)
+      comp = make_comparison("ips", {}, stats_a, 0, 2, stats_a, worst: stats_b)
       expect(comp.all_same?).to be true
     end
 
     it "returns true when best and worst have identical single samples" do
       stats_a = make_stats([1.0])
       stats_b = make_stats([1.0])
-      comp = make_comparison("queries", {}, stats_a, 0, 2, stats_a, stats_b)
+      comp = make_comparison("queries", {}, stats_a, 0, 2, stats_a, worst: stats_b)
       expect(comp.all_same?).to be true
     end
 
     it "returns false when best and worst are distinct" do
       fast = make_stats([100.0, 110.0, 105.0])
       slow = make_stats([10.0, 11.0, 10.5])
-      comp = make_comparison("ips", {}, fast, 0, 2, fast, slow)
+      comp = make_comparison("ips", {}, fast, 0, 2, fast, worst: slow)
       expect(comp.all_same?).to be false
     end
 
     it "returns false when single samples differ" do
       stats_a = make_stats([1.0])
       stats_b = make_stats([2.0])
-      comp = make_comparison("queries", {}, stats_a, 0, 2, stats_a, stats_b)
+      comp = make_comparison("queries", {}, stats_a, 0, 2, stats_a, worst: stats_b)
       expect(comp.all_same?).to be false
     end
 
@@ -97,7 +97,7 @@ RSpec.describe Benchmark::Sweet::Comparison do
     it "returns false when all entries overlap" do
       stats_a = make_stats([100.0, 102.0, 101.0])
       stats_b = make_stats([99.0, 101.0, 100.0])
-      comp = make_comparison("ips", {}, stats_a, 0, 2, stats_a, stats_b)
+      comp = make_comparison("ips", {}, stats_a, 0, 2, stats_a, worst: stats_b)
       expect(comp.best?).to be false
       expect(comp.mode).to eq(:same)
     end
@@ -105,7 +105,7 @@ RSpec.describe Benchmark::Sweet::Comparison do
     it "returns true when entries are distinct" do
       fast = make_stats([100.0, 110.0, 105.0])
       slow = make_stats([10.0, 11.0, 10.5])
-      comp = make_comparison("ips", {}, fast, 0, 2, fast, slow)
+      comp = make_comparison("ips", {}, fast, 0, 2, fast, worst: slow)
       expect(comp.best?).to be true
       expect(comp.mode).to eq(:best)
     end

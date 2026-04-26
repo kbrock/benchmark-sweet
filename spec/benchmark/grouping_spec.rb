@@ -5,8 +5,8 @@ RSpec.describe Benchmark::Sweet do
     Benchmark::IPS::Stats::SD.new(Array(values))
   end
 
-  def make_comparison(metric, label, stats, offset = 0, total = 1, baseline = stats)
-    Benchmark::Sweet::Comparison.new(metric, label, stats, offset, total, baseline)
+  def make_comparison(metric, label, stats, offset = 0, total = 1, best = stats)
+    Benchmark::Sweet::Comparison.new(metric, label, stats, offset, total, best)
   end
 
   describe ".symbol_to_proc" do
@@ -113,6 +113,39 @@ RSpec.describe Benchmark::Sweet do
         headers << header
       end
       expect(headers).to contain_exactly("wide", "deep")
+    end
+
+    it "collects into hash when cell is set" do
+      comps = [
+        make_comparison("ips", {method: "fast", config: "mp1"}, stats_fast),
+        make_comparison("queries", {method: "fast", config: "mp1"}, make_stats([1.0])),
+        make_comparison("ips", {method: "fast", config: "mp3"}, stats_slow),
+        make_comparison("queries", {method: "fast", config: "mp3"}, make_stats([2.0])),
+      ]
+
+      rows = nil
+      described_class.table(comps, row: :method, column: :config, cell: :metric) do |_, r|
+        rows = r
+      end
+      expect(rows.length).to eq(1)
+      cell = rows.first["mp1"]
+      expect(cell).to be_a(Hash)
+      expect(cell.keys).to contain_exactly("ips", "queries")
+      expect(cell["ips"]).to be_a(Benchmark::Sweet::Comparison)
+    end
+
+    it "returns single value without cell (backwards compatible)" do
+      comps = [
+        make_comparison("ips", {method: "fast", config: "mp1"}, stats_fast),
+      ]
+
+      rows = nil
+      described_class.table(comps, row: :method, column: :config, value: -> c { c }) do |_, r|
+        rows = r
+      end
+      cell = rows.first["mp1"]
+      expect(cell).to be_a(Benchmark::Sweet::Comparison)
+      expect(cell).not_to be_a(Hash)
     end
   end
 end

@@ -201,6 +201,58 @@ RSpec.describe Benchmark::Sweet::Job do
     end
   end
 
+  describe "#filter" do
+    it "filters by hash inclusion" do
+      job = described_class.new(metrics: %w(ips))
+      job.add_entry({config: "mp1", operation: "fast"}, "ips", [100.0])
+      job.add_entry({config: "mp3", operation: "fast"}, "ips", [200.0])
+      job.add_entry({config: "ltree", operation: "fast"}, "ips", [150.0])
+
+      job.filter config: %w[mp1 mp3]
+      entries = job.relevant_entries
+      labels = entries.flat_map { |_, h| h.keys.map { |l| l[:config] } }
+      expect(labels).to contain_exactly("mp1", "mp3")
+    end
+
+    it "filters by block" do
+      job = described_class.new(metrics: %w(ips))
+      job.add_entry({config: "mp1", operation: "fast"}, "ips", [100.0])
+      job.add_entry({config: "mp1", operation: "slow"}, "ips", [10.0])
+
+      job.filter { |label| label[:operation] != "slow" }
+      entries = job.relevant_entries
+      labels = entries.flat_map { |_, h| h.keys.map { |l| l[:operation] } }
+      expect(labels).to eq(["fast"])
+    end
+
+    it "combines hash and block" do
+      job = described_class.new(metrics: %w(ips))
+      job.add_entry({config: "mp1", operation: "fast"}, "ips", [100.0])
+      job.add_entry({config: "mp1", operation: "slow"}, "ips", [10.0])
+      job.add_entry({config: "mp3", operation: "fast"}, "ips", [200.0])
+
+      job.filter(config: %w[mp1]) { |label| label[:operation] == "fast" }
+      entries = job.relevant_entries
+      labels = entries.flat_map { |_, h| h.keys }
+      expect(labels.length).to eq(1)
+      expect(labels.first[:config]).to eq("mp1")
+      expect(labels.first[:operation]).to eq("fast")
+    end
+
+    it "does not affect save_entries" do
+      Tempfile.create(["benchmark", ".json"]) do |f|
+        job = described_class.new(metrics: %w(ips))
+        job.add_entry({config: "mp1"}, "ips", [100.0])
+        job.add_entry({config: "mp3"}, "ips", [200.0])
+        job.filter config: %w[mp1]
+        job.save_entries(f.path)
+
+        saved = JSON.parse(File.read(f.path))
+        expect(saved.length).to eq(2)
+      end
+    end
+  end
+
   describe "serialization" do
     it "round-trips entries through save and load" do
       Tempfile.create(["benchmark", ".json"]) do |f|

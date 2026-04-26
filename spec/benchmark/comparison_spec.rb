@@ -5,8 +5,8 @@ RSpec.describe Benchmark::Sweet::Comparison do
     Benchmark::IPS::Stats::SD.new(Array(values))
   end
 
-  def make_comparison(metric, label, stats, offset, total, baseline, worst = nil)
-    Benchmark::Sweet::Comparison.new(metric, label, stats, offset, total, baseline, worst)
+  def make_comparison(metric, label, stats, offset, total, best, worst: nil)
+    Benchmark::Sweet::Comparison.new(metric, label, stats, offset, total, best, worst: worst)
   end
 
   let(:fast_stats) { make_stats([100.0, 110.0, 105.0]) }
@@ -42,6 +42,43 @@ RSpec.describe Benchmark::Sweet::Comparison do
     end
   end
 
+  describe "#ratio" do
+    # fast ~105, slow ~52, so mid between them
+    let(:mid_stats) { make_stats([75.0, 77.0, 76.0]) }
+
+    it "returns nil when no reference is set" do
+      comp = make_comparison("ips", {method: "fast"}, fast_stats, 0, 2, fast_stats)
+      expect(comp.ratio).to be_nil
+    end
+
+    it "returns 1.0 for the reference entry itself" do
+      comp = Benchmark::Sweet::Comparison.new("ips", {method: "mid"}, mid_stats, 1, 3, fast_stats, worst: slow_stats, reference: mid_stats)
+      expect(comp.ratio).to eq(1.0)
+    end
+
+    it "returns >1.0 when faster than reference" do
+      comp = Benchmark::Sweet::Comparison.new("ips", {method: "fast"}, fast_stats, 0, 3, fast_stats, worst: slow_stats, reference: mid_stats)
+      expect(comp.ratio).to be > 1.0
+    end
+
+    it "returns <1.0 when slower than reference" do
+      comp = Benchmark::Sweet::Comparison.new("ips", {method: "slow"}, slow_stats, 2, 3, fast_stats, worst: slow_stats, reference: mid_stats)
+      expect(comp.ratio).to be < 1.0
+    end
+
+    it "returns nil when reference has zero central_tendency" do
+      zero_stats = make_stats([0.0])
+      comp = Benchmark::Sweet::Comparison.new("queries", {method: "fast"}, fast_stats, 0, 2, fast_stats, reference: zero_stats)
+      expect(comp.ratio).to be_nil
+    end
+
+    it "preserves best/worst ranking independent of reference" do
+      comp = Benchmark::Sweet::Comparison.new("ips", {method: "fast"}, fast_stats, 0, 3, fast_stats, worst: slow_stats, reference: mid_stats)
+      expect(comp.best?).to be true
+      expect(comp.ratio).to be > 1.0
+    end
+  end
+
   describe "#units" do
     it "returns i/s for ips metric" do
       comp = make_comparison("ips", {}, fast_stats, 0, 1, fast_stats)
@@ -53,8 +90,13 @@ RSpec.describe Benchmark::Sweet::Comparison do
       expect(comp.units).to eq("bytes")
     end
 
-    it "returns objs for unknown metrics" do
+    it "returns queries for queries metric" do
       comp = make_comparison("queries", {}, fast_stats, 0, 1, fast_stats)
+      expect(comp.units).to eq("queries")
+    end
+
+    it "returns objs for unknown metrics" do
+      comp = make_comparison("unknown_metric", {}, fast_stats, 0, 1, fast_stats)
       expect(comp.units).to eq("objs")
     end
   end

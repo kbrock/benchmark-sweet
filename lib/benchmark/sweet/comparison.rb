@@ -1,17 +1,25 @@
 module Benchmark
   module Sweet
     class Comparison
-      UNITS = {"ips" => "i/s", "memsize" => "bytes", "memsize_retained" => "bytes"}.freeze
-      attr_reader :label, :metric, :stats, :baseline, :worst
+      UNITS = {"ips" => "i/s", "memsize" => "bytes", "memsize_retained" => "bytes", "queries" => "queries", "rows" => "rows", "cached" => "queries"}.freeze
+      attr_reader :label, :metric, :stats, :best, :worst, :reference
       attr_reader :offset, :total
-      def initialize(metric, label, stats, offset, total, baseline, worst = nil)
+      def initialize(metric, label, stats, offset, total, best, worst: nil, reference: nil)
         @metric = metric
         @label = label
         @stats = stats
         @offset = offset
         @total = total
-        @baseline = baseline
+        @best = best
         @worst = worst
+        @reference = reference
+      end
+
+      # Value relative to a named baseline. >1.0 = faster/better, <1.0 = slower/worse.
+      def ratio
+        return nil unless @reference
+        return nil if @reference.central_tendency == 0
+        stats.central_tendency / @reference.central_tendency
       end
 
       def [](field)
@@ -34,13 +42,13 @@ module Benchmark
       end
 
       # @return true if this is the best entry AND it is distinguishable from the worst
-      def best? ; !baseline || (baseline == stats && !all_same?) ; end
+      def best? ; !best || (best == stats && !all_same?) ; end
 
       # @return true if it is basically the same as the best
       def overlaps?
         return @overlaps if defined?(@overlaps)
         @overlaps = slowdown == 1 ||
-                      stats && baseline && (stats.central_tendency == baseline.central_tendency || stats.overlaps?(baseline))
+                      stats && best && (stats.central_tendency == best.central_tendency || stats.overlaps?(best))
       end
 
       def worst?
@@ -54,13 +62,13 @@ module Benchmark
 
       # @return [Boolean] true if all entries in this comparison group overlap (no meaningful differences)
       def all_same?
-        return false unless @worst && baseline
-        (baseline.central_tendency == @worst.central_tendency) || baseline.overlaps?(@worst)
+        return false unless @worst && best
+        (best.central_tendency == @worst.central_tendency) || best.overlaps?(@worst)
       end
 
       def slowdown
         return @slowdown if @slowdown
-        @slowdown, @diff_error = stats.slowdown(baseline)
+        @slowdown, @diff_error = stats.slowdown(best)
         @slowdown
       end
 
@@ -98,7 +106,7 @@ module Benchmark
       end
 
       def comp_bar(width: 20, color: false)
-        fill = (baseline && !overlaps?) ? (width.to_f / slowdown).round : width
+        fill = (best && !overlaps?) ? (width.to_f / slowdown).round : width
         fill = fill.clamp(0, width)
         shade = width - fill
         bar = "█" * fill + "░" * shade
@@ -106,7 +114,7 @@ module Benchmark
       end
 
       def color
-        if !baseline
+        if !best
           ";0"
         elsif best? || overlaps?
           "32"
