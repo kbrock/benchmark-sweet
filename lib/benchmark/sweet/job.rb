@@ -282,6 +282,7 @@ module Benchmark
         formatter.row = @report_options[:row] if @report_options[:row]
         formatter.column = @report_options[:column] if @report_options[:column]
         formatter.sort = @report_options[:sort] if @report_options[:sort]
+        formatter.cell = @report_options[:cell] if @report_options[:cell] && formatter.respond_to?(:cell=)
         formatter.value = @report_options[:value] if @report_options[:value]
         formatter.baseline = @report_options[:baseline] if @report_options[:baseline] && formatter.respond_to?(:baseline=)
         formatter.title = File.basename(@report_output.to_s, ".*") if @report_output && formatter.respond_to?(:title=)

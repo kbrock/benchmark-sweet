@@ -3,7 +3,7 @@
 module Benchmark
   module Sweet
     class MarkdownReport
-      attr_accessor :grouping, :row, :column, :sort, :value
+      attr_accessor :grouping, :row, :column, :sort, :value, :cell
 
       def initialize
         @grouping = nil
@@ -11,10 +11,11 @@ module Benchmark
         @column = :metric
         @sort = false
         @value = method(:render_cell)
+        @cell = nil
       end
 
       def render(comparisons, io)
-        Benchmark::Sweet.table(comparisons, grouping: grouping, row: row, column: column, value: -> c { c }, sort: sort) do |header_value, table_rows|
+        Benchmark::Sweet.table(comparisons, grouping: grouping, row: row, column: column, cell: cell, value: -> c { c }, sort: sort) do |header_value, table_rows|
           next if table_rows.empty?
           print_table(header_value, table_rows, out: io)
         end
@@ -32,6 +33,8 @@ module Benchmark
             val = row_data[key]
             if val.nil?
               ""
+            elsif val.is_a?(Hash)
+              val.values.map { |v| value.call(v, color: false) }.join(" | ")
             elsif val.is_a?(Benchmark::Sweet::Comparison)
               value.call(val, color: false)
             else

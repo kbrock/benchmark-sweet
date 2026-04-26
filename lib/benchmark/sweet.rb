@@ -47,16 +47,26 @@ module Benchmark
       label_records.each(&block)
     end
 
-    def self.table(base, grouping: nil, sort: false, row: :label, column: :metric, value: :comp_short)
+    def self.table(base, grouping: nil, sort: false, row: :label, column: :metric, cell: nil, value: :comp_short)
       header_name = grouping.respond_to?(:call) ? "grouping" : grouping
       column = symbol_to_proc(column)
+      cell_proc = symbol_to_proc(cell) if cell
       value = symbol_to_proc(value)
 
       group(base, grouping, sort: true) do |header_value, table_comparisons|
         row_key = row.kind_of?(Symbol) || row.kind_of?(String) ? row : "label"
         table_rows = group(table_comparisons, row, sort: sort).map do |row_header, row_comparisons|
-          row_comparisons.each_with_object({row_key => row_header}) do |comparison, row_data|
-            row_data[column.call(comparison)] = value.call(comparison)
+          if cell_proc
+            # Collect comparisons into a hash keyed by cell value per (row, column) position
+            row_comparisons.each_with_object({row_key => row_header}) do |comparison, row_data|
+              col_key = column.call(comparison)
+              cell_key = cell_proc.call(comparison)
+              (row_data[col_key] ||= {})[cell_key] = comparison
+            end
+          else
+            row_comparisons.each_with_object({row_key => row_header}) do |comparison, row_data|
+              row_data[column.call(comparison)] = value.call(comparison)
+            end
           end
         end
         yield header_value, table_rows
