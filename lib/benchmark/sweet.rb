@@ -73,6 +73,19 @@ module Benchmark
       end
     end
 
+    # Extract sorted column headers from table rows.
+    # Row label key stays first, remaining columns sorted alphabetically.
+    # If baseline is provided, it comes immediately after the row label.
+    def self.column_headers(table_rows, baseline: nil)
+      headers = table_rows.flat_map(&:keys).uniq
+      row_key = headers.first
+      columns = headers[1..].sort_by(&:to_s)
+      if baseline && (idx = columns.index { |c| c.to_s == baseline.to_s })
+        columns.unshift(columns.delete_at(idx))
+      end
+      [row_key, *columns]
+    end
+
     # proc produced: -> (comparison) { comparison.method }
     def self.symbol_to_proc(field, join: "_")
       if field.kind_of?(Symbol) || field.kind_of?(String)

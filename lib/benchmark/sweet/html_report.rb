@@ -32,7 +32,7 @@ module Benchmark
         html = ""
         html << "    <h2>#{escape(header_value.to_s)}</h2>\n" if header_value
 
-        headers = table_rows.flat_map(&:keys).uniq
+        headers = Benchmark::Sweet.column_headers(table_rows, baseline: @baseline)
         # With 2 data columns, every cell is best or worst — color is noise, just bold best.
         # With 3+, color helps scan for the best/worst across many options.
         use_color = headers.size > 3

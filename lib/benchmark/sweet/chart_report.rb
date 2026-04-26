@@ -39,7 +39,7 @@ module Benchmark
       private
 
       def build_chart_data(header_value, table_rows)
-        headers = table_rows.flat_map(&:keys).uniq
+        headers = Benchmark::Sweet.column_headers(table_rows, baseline: @baseline)
         row_key = headers.first
         column_keys = headers[1..]
 
@@ -74,7 +74,7 @@ module Benchmark
       # Build chart when cell: :metric is set. Each cell is a hash of {metric => Comparison}.
       # bar/line attrs control which metric renders as which type.
       def build_multi_metric_chart(header_value, table_rows)
-        headers = table_rows.flat_map(&:keys).uniq
+        headers = Benchmark::Sweet.column_headers(table_rows, baseline: @baseline)
         row_key = headers.first
         column_keys = headers[1..]
 

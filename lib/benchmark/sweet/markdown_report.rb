@@ -26,7 +26,7 @@ module Benchmark
       def print_table(header_value, table_rows, out: $stdout)
         return if table_rows.empty?
 
-        headers = table_rows.flat_map(&:keys).uniq
+        headers = Benchmark::Sweet.column_headers(table_rows)
 
         formatted_rows = table_rows.map do |row_data|
           headers.map do |key|
