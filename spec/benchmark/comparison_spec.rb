@@ -66,6 +66,12 @@ RSpec.describe Benchmark::Sweet::Comparison do
       expect(comp.ratio).to be < 1.0
     end
 
+    it "returns nil when reference has zero central_tendency" do
+      zero_stats = make_stats([0.0])
+      comp = Benchmark::Sweet::Comparison.new("queries", {method: "fast"}, fast_stats, 0, 2, fast_stats, reference: zero_stats)
+      expect(comp.ratio).to be_nil
+    end
+
     it "preserves best/worst ranking independent of reference" do
       comp = Benchmark::Sweet::Comparison.new("ips", {method: "fast"}, fast_stats, 0, 3, fast_stats, worst: slow_stats, reference: mid_stats)
       expect(comp.best?).to be true
