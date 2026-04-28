@@ -3,7 +3,7 @@
 module Benchmark
   module Sweet
     class HtmlReport
-      attr_accessor :grouping, :row, :column, :sort, :value, :title, :cell
+      attr_accessor :grouping, :row, :column, :sort, :value, :title, :cell, :baseline
 
       def initialize
         @grouping = nil
@@ -13,6 +13,7 @@ module Benchmark
         @value = method(:render_cell)
         @title = "Benchmark Report"
         @cell = nil
+        @baseline = nil
       end
 
       def render(comparisons, io)
@@ -29,7 +30,7 @@ module Benchmark
       private
 
       def render_table(header_value, table_rows)
-        html = ""
+        html = +""
         html << "    <h2>#{escape(header_value.to_s)}</h2>\n" if header_value
 
         headers = Benchmark::Sweet.column_headers(table_rows, baseline: @baseline)
@@ -67,8 +68,14 @@ module Benchmark
       end
 
       def render_cell(c, color: true)
-        tip = escape(tooltip(c))
-        val = format_number(c.central_tendency)
+        ratio = c.ratio
+        if ratio
+          val = ratio == 1.0 ? "1x" : "%.1fx" % ratio
+          tip = escape("#{format_number(c.central_tendency)} #{c.units}")
+        else
+          val = format_number(c.central_tendency)
+          tip = escape(tooltip(c))
+        end
         classes = ["metric", c.mode.to_s]
         classes << "worst" if c.worst? && !c.overlaps?
 
