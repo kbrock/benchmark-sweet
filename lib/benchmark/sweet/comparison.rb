@@ -15,6 +15,10 @@ module Benchmark
         @reference = reference
       end
 
+      def baseline?
+        @reference && stats.equal?(@reference)
+      end
+
       # Value relative to a named baseline. >1.0 = faster/better, <1.0 = slower/worse.
       def ratio
         return nil unless @reference
