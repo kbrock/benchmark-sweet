@@ -321,7 +321,7 @@ module Benchmark
             end
 
             comparisons = sorted.each_with_index.map { |(label, stats), i| Comparison.new(metric_name, label, stats, i, total, best_stats, worst: worst_stats, reference: reference_stats) }
-            @skip_unremarkable && comparisons.first&.all_same? ? [] : comparisons
+            @skip_unremarkable && comparisons.size > 1 && comparisons.first&.all_same? ? [] : comparisons
           end
         end
       end

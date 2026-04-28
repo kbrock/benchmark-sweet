@@ -191,6 +191,15 @@ RSpec.describe Benchmark::Sweet::Job do
       expect(comparisons.map { |c| c[:operation] }.uniq).to eq(["descendants"])
     end
 
+    it "keeps single entry even when all_same would be true" do
+      job = described_class.new(metrics: %w(queries))
+      job.add_entry({operation: "parent"}, "queries", [1.0])
+      job.skip_unremarkable!
+
+      comparisons = job.comparison_values
+      expect(comparisons.length).to eq(1)
+    end
+
     it "does not filter when not enabled" do
       job = described_class.new(metrics: %w(queries))
       job.add_entry({operation: "parent"}, "queries", [1.0])
