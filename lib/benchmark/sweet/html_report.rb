@@ -68,9 +68,11 @@ module Benchmark
       end
 
       def render_cell(c, color: true)
-        ratio = c.ratio
-        if ratio
-          val = ratio == 1.0 ? "1x" : "%.1fx" % ratio
+        if c.baseline?
+          val = format_number(c.central_tendency)
+          tip = escape("baseline (#{c.units})")
+        elsif c.ratio
+          val = "%.1fx" % c.ratio
           tip = escape("#{format_number(c.central_tendency)} #{c.units}")
         else
           val = format_number(c.central_tendency)
@@ -87,7 +89,7 @@ module Benchmark
       def css_color(comparison)
         case comparison.mode
         when :best then "#1a7f37"
-        when :same then "#1a7f37"
+        when :same then "#656d76"
         when :slower then comparison.worst? ? "#cf222e" : "#656d76"
         when :slowerish then "#656d76"
         end
