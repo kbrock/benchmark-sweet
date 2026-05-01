@@ -282,6 +282,7 @@ module Benchmark
         formatter.row = @report_options[:row] if @report_options[:row]
         formatter.column = @report_options[:column] if @report_options[:column]
         formatter.sort = @report_options[:sort] if @report_options[:sort]
+        formatter.column_sort = @report_options[:column_sort] if @report_options.key?(:column_sort) && formatter.respond_to?(:column_sort=)
         formatter.cell = @report_options[:cell] if @report_options[:cell] && formatter.respond_to?(:cell=)
         formatter.bar = @report_options[:bar] if @report_options[:bar] && formatter.respond_to?(:bar=)
         formatter.line = @report_options[:line] if @report_options[:line] && formatter.respond_to?(:line=)

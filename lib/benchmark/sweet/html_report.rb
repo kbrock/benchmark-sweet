@@ -3,7 +3,7 @@
 module Benchmark
   module Sweet
     class HtmlReport
-      attr_accessor :grouping, :row, :column, :sort, :value, :title, :cell, :baseline
+      attr_accessor :grouping, :row, :column, :sort, :column_sort, :value, :title, :cell, :baseline
 
       def initialize
         @grouping = nil
@@ -33,7 +33,7 @@ module Benchmark
         html = +""
         html << "    <h2>#{escape(header_value.to_s)}</h2>\n" if header_value
 
-        headers = Benchmark::Sweet.column_headers(table_rows, baseline: @baseline)
+        headers = Benchmark::Sweet.column_headers(table_rows, baseline: @baseline, column_sort: @column_sort)
         # With 2 data columns, every cell is best or worst — color is noise, just bold best.
         # With 3+, color helps scan for the best/worst across many options.
         use_color = headers.size > 3

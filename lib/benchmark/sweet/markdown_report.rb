@@ -3,7 +3,7 @@
 module Benchmark
   module Sweet
     class MarkdownReport
-      attr_accessor :grouping, :row, :column, :sort, :value, :cell
+      attr_accessor :grouping, :row, :column, :sort, :column_sort, :value, :cell
 
       def initialize
         @grouping = nil
@@ -26,7 +26,7 @@ module Benchmark
       def print_table(header_value, table_rows, out: $stdout)
         return if table_rows.empty?
 
-        headers = Benchmark::Sweet.column_headers(table_rows)
+        headers = Benchmark::Sweet.column_headers(table_rows, column_sort: @column_sort)
 
         formatted_rows = table_rows.map do |row_data|
           headers.map do |key|
