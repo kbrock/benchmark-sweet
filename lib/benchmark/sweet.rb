@@ -73,15 +73,21 @@ module Benchmark
       end
     end
 
-    # Extract sorted column headers from table rows.
-    # Row label key stays first, remaining columns sorted alphabetically.
-    # If baseline is provided, it comes immediately after the row label.
-    def self.column_headers(table_rows, baseline: nil)
+    # Extract column headers from table rows. Row label key stays first.
+    # @param column_sort [Boolean, Proc] false for insertion order, true for alphabetical,
+    #   or a lambda receiving column array returning ordered array.
+    # @param baseline [String, nil] pinned first (after row label) for boolean column_sort.
+    def self.column_headers(table_rows, baseline: nil, column_sort: false)
       headers = table_rows.flat_map(&:keys).uniq
       row_key = headers.first
-      columns = headers[1..].sort_by(&:to_s)
-      if baseline && (idx = columns.index { |c| c.to_s == baseline.to_s })
-        columns.unshift(columns.delete_at(idx))
+      columns = headers[1..]
+      if column_sort.respond_to?(:call)
+        columns = column_sort.call(columns)
+      elsif column_sort
+        columns = columns.sort_by(&:to_s)
+        if baseline && (idx = columns.index { |c| c.to_s == baseline.to_s })
+          columns.unshift(columns.delete_at(idx))
+        end
       end
       [row_key, *columns]
     end

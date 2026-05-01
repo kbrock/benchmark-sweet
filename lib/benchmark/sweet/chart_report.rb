@@ -3,7 +3,7 @@
 module Benchmark
   module Sweet
     class ChartReport
-      attr_accessor :grouping, :row, :column, :sort, :value, :title, :baseline, :cell
+      attr_accessor :grouping, :row, :column, :sort, :column_sort, :value, :title, :baseline, :cell
       # bar/line/scatter: metric names (Symbol or Array) for chart type mapping
       attr_accessor :bar, :line, :scatter
 
@@ -39,7 +39,7 @@ module Benchmark
       private
 
       def build_chart_data(header_value, table_rows)
-        headers = Benchmark::Sweet.column_headers(table_rows, baseline: @baseline)
+        headers = Benchmark::Sweet.column_headers(table_rows, baseline: @baseline, column_sort: @column_sort)
         row_key = headers.first
         column_keys = headers[1..]
 
@@ -74,7 +74,7 @@ module Benchmark
       # Build chart when cell: :metric is set. Each cell is a hash of {metric => Comparison}.
       # bar/line attrs control which metric renders as which type.
       def build_multi_metric_chart(header_value, table_rows)
-        headers = Benchmark::Sweet.column_headers(table_rows, baseline: @baseline)
+        headers = Benchmark::Sweet.column_headers(table_rows, baseline: @baseline, column_sort: @column_sort)
         row_key = headers.first
         column_keys = headers[1..]
 
