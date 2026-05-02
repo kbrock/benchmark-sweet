@@ -81,6 +81,7 @@ module Benchmark
       headers = table_rows.flat_map(&:keys).uniq
       row_key = headers.first
       columns = headers[1..]
+      columns.reject! { |col| table_rows.all? { |r| r[col].nil? } }
       if column_sort.respond_to?(:call)
         columns = column_sort.call(columns)
       elsif column_sort
